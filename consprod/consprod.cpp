@@ -358,8 +358,10 @@ class WindowPlacer
 		
 		void next()
 		{
+			int maxx, maxy;
+			getmaxyx(stdscr, maxx, maxy);
 			mcurx += mw+1;
-			if (mcurx > 100)
+			if (mcurx > maxx)
 			{
 				mcurx=0;
 				mcury += mh+1;
@@ -373,38 +375,79 @@ class WindowPlacer
 
 };
 
-const int width=30;
+const int width=15;
 const int height=20;
 WindowPlacer placer(width,height, 8);
 
+template<typename ThreadClass, typename Queue>
+class WindowedThread
+{
+	public:
+		WindowedThread(string title, Queue& input)
+		{
+			mwin = new Window(placer.top(), placer.left(), height, width, title);
+			mthreadClass = new ThreadClass(*mwin, input);
+			placer.next();
+			new thread(
+				[this]()
+				{ this->mthreadClass->work(); }
+			); // TODO keep thread to join it
+		}
+
+	private:
+		ThreadClass* mthreadClass;
+		Window* mwin;
+};
+
 int main(int argc, const char* argv[])
 {
-	unsigned long wait_ms=10000;
-
+/*
 	Window producerWindow(placer.top(),placer.left(),height,width, placer.title("Producer"));
 	placer.next();
 
 	Window consumerWindow(placer.top(),placer.left(),height,width, placer.title("Consumer"));
 	placer.next();
+	*/
 
 	Window status(0,0, 7,80, "Status");
 
 	LockQueue<Document>	input;
 
-	Producer<Document> producer(producerWindow, input, 10, 20);
-	Consumer<Document> consumer(consumerWindow, input);
+	// Producer<Document> producer(producerWindow, input, 10, 20);
+	// Consumer<Document> consumer(consumerWindow, input);
 
-	thread thread_prod([&producer](){ producer.work(); });
-	thread thread_cons([&consumer](){ consumer.work(); });
+	// thread thread_prod([&producer](){ producer.work(); });
+	// thread thread_cons([&consumer](){ consumer.work(); });
 
 	status << "Threads are running together..." << Window::chars::endl;
-	this_thread::sleep_for(std::chrono::milliseconds(wait_ms));
+	bool inside(true);
+	while(inside)
+	{
+		char c;
+		cin >> c;
+		switch(c)
+		{
+			case 'c':
+				new WindowedThread<Consumer<Document>, LockQueue<Document>>("consumer", input);
+				status << "New consumer" << Window::chars::endl;
+				break;
 
-	producer.stop();
-	consumer.stop();
+			case 'p':
+				new WindowedThread<Producer<Document>, LockQueue<Document>>("producer", input);
+				status << "New producer" << Window::chars::endl;
+				break;
 
-	thread_prod.join();
-	thread_cons.join();
+			default:
+				status << "Unknown command " << c << Window::chars::endl;
+				break;
+		}
+	}
+
+	// producer.stop(); TODO
+	// consumer.stop(); TODO
+
+	// thread_prod.join(); TODO
+	// thread_cons.join(); TODO
 	
 	return 0;
 }
