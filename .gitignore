@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# Tmp files
+*.sw?
+
+# setup is already in git
+setup
