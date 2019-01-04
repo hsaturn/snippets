@@ -6,8 +6,108 @@
 #include <thread>
 #include <mutex>
 #include <chrono>
+#include <sstream>
+#include <ncurses.h>
 
 using namespace std;
+
+class Window
+{
+	public:
+		using pos=unsigned int;
+		enum class chars : char
+		{
+			endl='\n'
+		};
+
+		Window(pos top, pos left, pos rows, pos columns, const string& title=""); 
+		~Window();
+
+		template<typename Type>
+		friend Window& operator << (Window&, const Type&);
+		friend Window& operator << (Window&, const chars& c);
+
+		void setTitle(const string&);
+
+	private:
+		WINDOW *win;
+		WINDOW *boxw; // ugly use decorator instead
+		pos mtop;
+		pos mleft;
+		pos mrows;
+		pos mcols;
+		pos x;
+		pos y;
+		static int  windows;
+		static mutex lock;
+};
+
+int Window::windows=0;
+mutex Window::lock;
+
+template<typename Type>
+Window& operator<<(Window& win, const Type& value)
+{
+	stringstream s;
+	s << value;
+	// mvwprintw(win.win, win.x+1, win.y+1, s.str().c_str());
+
+	lock_guard<mutex> lck(Window::lock);
+	for(char c : s.str())
+	{
+		waddch(win.win,c);
+	}
+	wrefresh(win.win);
+
+	return win;
+}
+
+Window& operator<<(Window& win, const Window::chars& c)
+{
+	return win << (char)c;
+}
+
+Window::Window(pos top, pos left, pos rows, pos columns, const string& title)
+:
+mtop(top), mleft(left), mrows(rows), mcols(columns), x(0), y(0)
+{
+	if (rows<3) rows=3;
+	if (columns<3) columns=3;
+	lock_guard<mutex> lck(lock);
+	if (windows==0)
+	{
+		initscr();
+		windows++;
+	}
+	boxw = newwin(mrows, mcols, mtop, mleft); 
+	box(boxw, ACS_VLINE, ACS_HLINE);
+	win = newwin(mrows-2, mcols-2, mtop+1, mleft+1); 
+
+	scrollok(win, true);
+	setTitle(title);
+}
+
+void Window::setTitle(const string& sTitle)
+{
+	int x=(mcols-sTitle.length())/2;
+	if (x<0) x=0;
+	mvwprintw(boxw, 0, x, sTitle.c_str());
+	wrefresh(boxw);
+	wrefresh(win);
+}
+
+Window::~Window()
+{
+	lock_guard<mutex> lck(lock);
+	delwin(win);
+	delwin(boxw);
+	windows--;
+	if (windows==0)
+	{
+		//getch();
+		//endwin(); TODO
+	}
+}
 
 template<typename Type>
 class Optional
@@ -123,7 +223,7 @@ class Document : public IDocument<Document>
 
 		int i() const { return mi; }
 
-		friend ostream& operator << (ostream& out, const Document& doc);
+		friend Window& operator << (Window& out, const Document& doc);
 
 		static Document generateRandom()
 		{
@@ -139,13 +239,14 @@ class Producer
 {
 		using QueueType = LockQueue<DocumentType>;
 	public:
-		Producer(QueueType& queue, unsigned int period_min, unsigned int period_max);
+		Producer(Window& win, QueueType& queue, unsigned int period_min=10, unsigned int period_max=20);
 
 		void stop() { active=false; }
 
 		void work();
 
 	private:
+		Window& mwin;
 		QueueType& mQueue;
 		bool active;
 		unsigned int period_min;
@@ -153,8 +254,9 @@ class Producer
 };
 
 template<typename DocumentType>
-Producer<DocumentType>::Producer(QueueType& queue, unsigned int pmin, unsigned int pmax)
+Producer<DocumentType>::Producer(Window& win, QueueType& queue, unsigned int pmin, unsigned int pmax)
 :
+mwin(win),
 mQueue(queue),
 active(true),
 period_min(pmin),
@@ -171,7 +273,8 @@ void Producer<DocumentType>::work()
 		mQueue.push(newDoc);
 
 		unsigned int wait_ms=period_min+(rand()%(period_max-period_min));
-		cout << "wait for " << wait_ms << "ms. size=" << mQueue.size() << endl;
+		mwin << newDoc << ' ';
+		//mwin << "wait for " << wait_ms << "ms. size=" << mQueue.size() << Window::chars::endl;
 		this_thread::sleep_for(std::chrono::milliseconds(wait_ms));
 	}
 }
@@ -181,20 +284,22 @@ class Consumer
 {
 		using QueueType = LockQueue<DocumentType>;
 	public:
-		Consumer(QueueType& mQueue);
+		Consumer(Window& win, QueueType& mQueue);
 
 		void work();
 		void stop() { active=false; }
 
 
 	private:
+		Window& mwin;
 		QueueType& mQueue;
 		bool active;
 };
 
 template<typename DocumentType>
-Consumer<DocumentType>::Consumer(QueueType& queue)
+Consumer<DocumentType>::Consumer(Window& win, QueueType& queue)
 :
+mwin(win),
 mQueue(queue),
 active(true)
 {}
@@ -205,24 +310,23 @@ void Consumer<DocumentType>::work()
 	unsigned long wait_ms=5;
 	while(active)
 	{
-		cout << "Consumer is waiting..." << wait_ms << endl;
 		this_thread::sleep_for(std::chrono::milliseconds(wait_ms));
 		Optional<DocumentType> doc = mQueue.pop();
 		if (doc)
 		{
-			cout << "Consumer working on " << doc.get() << endl;
+			mwin << doc.get() << ' ';
 		}
 		else
 		{
-			cout << "Nothing to work on" << endl;
+			mwin << "nop ";
 		}
 	}
-	cout << "Consumer end..." << endl;
+	mwin << "Consumer end..." << Window::chars::endl;
 }
 
-ostream& operator<< (ostream& out, const Document& doc) 
+Window& operator<< (Window& win, const Document& doc) 
 {
-	cout << doc.mi;
+	return win << doc.mi;
 }
 
 template<typename T, typename Container>
@@ -230,19 +334,70 @@ void dumpQueue(const LockQueue<T,Container>& input, string header="Queue: ")
 {
 }
 
+class WindowPlacer
+{
+	public:
+		using pos=Window::pos;
+		WindowPlacer(pos width, pos height, pos top)
+		:
+		mw(width), mh(height),
+		mcurx(0), mcury(top)
+		{
+		}
+
+		pos left() const { return mcurx; }
+		pos top() const { return mcury; }
+
+		string title(const string& sClass)
+		{
+			mClasses[sClass]++;
+			stringstream s;
+			s << sClass << ' ' << mClasses[sClass];
+			return s.str();
+		}
+		
+		void next()
+		{
+			mcurx += mw+1;
+			if (mcurx > 100)
+			{
+				mcurx=0;
+				mcury += mh+1;
+			}
+		}
+
+	private:
+		pos mw, mh;
+		pos mcurx, mcury;
+		map<string, int> mClasses;
+
+};
+
+const int width=30;
+const int height=20;
+WindowPlacer placer(width,height, 8);
+
 int main(int argc, const char* argv[])
 {
-	unsigned long wait_ms=1000;
-	LockQueue<Document>	input;
-	cout << input << endl;
+	unsigned long wait_ms=10000;
 
-	Producer<Document> producer(input, 10, 20);
-	Consumer<Document> consumer(input);
+	Window producerWindow(placer.top(),placer.left(),height,width, placer.title("Producer"));
+	placer.next();
+
+	Window consumerWindow(placer.top(),placer.left(),height,width, placer.title("Consumer"));
+	placer.next();
+
+	Window status(0,0, 7,80, "Status");
+
+	LockQueue<Document>	input;
+
+	Producer<Document> producer(producerWindow, input, 10, 20);
+	Consumer<Document> consumer(consumerWindow, input);
 
 	thread thread_prod([&producer](){ producer.work(); });
 	thread thread_cons([&consumer](){ consumer.work(); });
 
-	cout << "Threads are running together..." << endl;
+	status << "Threads are running together..." << Window::chars::endl;
 	this_thread::sleep_for(std::chrono::milliseconds(wait_ms));
 
 	producer.stop();

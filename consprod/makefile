@@ -1,10 +1,10 @@
 SRC=$(wildcard *.cpp)
 OBJS=$(SRC:.cpp=.o)
 BUILD_DIR=build
-OPTS=-std=c++17 -MMD
+OPTS=-std=c++17 -MMD -Wall
 BUILD_OBJS=$(addprefix $(BUILD_DIR)/, $(SRC:.cpp=.o))
 LINKER=g++ $(OPTS)
-LINK_POSTOPT=-pthread
+LINK_POSTOPT=-pthread -lncurses
 COMPILER=g++
 TARGET=consprod
 
@@ -21,11 +21,7 @@ consprod: $(BUILD_OBJS)
 	$(LINKER) -o $@ $^ $(LINK_POSTOPT)
 	@echo "Link done"
 
-%.o: %.cpp makefile
-	$(COMPILER) $(OPTS) -c $< -o $@
-
-
-$(BUILD_DIR)/%.o: %.cpp | build_dir
+$(BUILD_DIR)/%.o: %.cpp makefile | build_dir
 	$(COMPILER) $(OPTS) -c $< -o $@
 
 clean:
