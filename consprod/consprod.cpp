@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <iostream>
+#include <list>
 #include <map>
 #include <vector>
 #include <queue>
@@ -38,11 +39,9 @@ class Window
 		pos mcols;
 		pos x;
 		pos y;
-		static int  windows;
 		static mutex lock;
 };
 
-int Window::windows=0;
 mutex Window::lock;
 
 template<typename Type>
@@ -74,11 +73,6 @@ mtop(top), mleft(left), mrows(rows), mcols(columns), x(0), y(0)
 	if (rows<3) rows=3;
 	if (columns<3) columns=3;
 	lock_guard<mutex> lck(lock);
-	if (windows==0)
-	{
-		initscr();
-		windows++;
-	}
 	boxw = newwin(mrows, mcols, mtop, mleft); 
 	box(boxw, ACS_VLINE, ACS_HLINE);
 	win = newwin(mrows-2, mcols-2, mtop+1, mleft+1); 
@@ -101,12 +95,6 @@ Window::~Window()
 	lock_guard<mutex> lck(lock);
 	delwin(win);
 	delwin(boxw);
-	windows--;
-	if (windows==0)
-	{
-		//getch();
-		//endwin(); TODO
-	}
 }
 
 template<typename Type>
@@ -288,13 +276,19 @@ class Consumer
 
 		void work();
 		void stop() { active=false; }
+		static void toggleNop() { nop = !nop; }
 
 
 	private:
 		Window& mwin;
 		QueueType& mQueue;
 		bool active;
+		static bool nop;
 };
+
+template<typename DocumentType>
+bool Consumer<DocumentType>::nop=true;
+
 
 template<typename DocumentType>
 Consumer<DocumentType>::Consumer(Window& win, QueueType& queue)
@@ -316,7 +310,7 @@ void Consumer<DocumentType>::work()
 		{
 			mwin << doc.get() << ' ';
 		}
-		else
+		else if (nop)
 		{
 			mwin << "nop ";
 		}
@@ -333,6 +327,17 @@ template<typename T, typename Container>
 void dumpQueue(const LockQueue<T,Container>& input, string header="Queue: ")
 {
 }
+
+struct xy
+{
+	xy() { getmaxyx(stdscr, y,x); }
+	int x;
+	int y;
+};
+
+const int width=15;
+const int height=10;
+const int status_height = 12;
 
 class WindowPlacer
 {
@@ -358,13 +363,12 @@ class WindowPlacer
 		
 		void next()
 		{
-			int maxx, maxy;
-			getmaxyx(stdscr, maxx, maxy);
+			xy max;
 			mcurx += mw+1;
-			if (mcurx > maxx)
+			if (mcurx+width > max.x)
 			{
 				mcurx=0;
-				mcury += mh+1;
+				mcury += mh;
 			}
 		}
 
@@ -374,10 +378,8 @@ class WindowPlacer
 		map<string, int> mClasses;
 
 };
+WindowPlacer placer(width,height, status_height);
 
-const int width=15;
-const int height=20;
-WindowPlacer placer(width,height, 8);
 
 template<typename ThreadClass, typename Queue>
 class WindowedThread
@@ -385,39 +387,46 @@ class WindowedThread
 	public:
 		WindowedThread(string title, Queue& input)
 		{
-			mwin = new Window(placer.top(), placer.left(), height, width, title);
+			mwin = new Window(placer.top(), placer.left(), height, width, placer.title(title));
 			mthreadClass = new ThreadClass(*mwin, input);
 			placer.next();
-			new thread(
+			mpthread = new thread(
 				[this]()
 				{ this->mthreadClass->work(); }
 			); // TODO keep thread to join it
+		} 
+
+		~WindowedThread()
+		{
+			stop();
+			join();
+		}
+
+		void stop()
+		{
+			mthreadClass->stop();
+		}
+
+		void join()
+		{
+			mpthread->join();
 		}
 
 	private:
 		ThreadClass* mthreadClass;
 		Window* mwin;
+		thread* mpthread;
 };
 
 int main(int argc, const char* argv[])
 {
-/*
-	Window producerWindow(placer.top(),placer.left(),height,width, placer.title("Producer"));
-	placer.next();
-
-	Window consumerWindow(placer.top(),placer.left(),height,width, placer.title("Consumer"));
-	placer.next();
-	*/
-
-	Window status(0,0, 7,80, "Status");
+	initscr();
+	xy max;
+	Window status(0,0, status_height,max.x, "Status");
 
 	LockQueue<Document>	input;
-
-	// Producer<Document> producer(producerWindow, input, 10, 20);
-	// Consumer<Document> consumer(consumerWindow, input);
-
-	// thread thread_prod([&producer](){ producer.work(); });
-	// thread thread_cons([&consumer](){ consumer.work(); });
+	list<WindowedThread<Consumer<Document>, LockQueue<Document>>*> listConsumers;
+	list<WindowedThread<Producer<Document>, LockQueue<Document>>*> listProducers;
 
 	status << "Threads are running together..." << Window::chars::endl;
 	bool inside(true);
@@ -428,13 +437,37 @@ int main(int argc, const char* argv[])
 		switch(c)
 		{
 			case 'c':
-				new WindowedThread<Consumer<Document>, LockQueue<Document>>("consumer", input);
-				status << "New consumer" << Window::chars::endl;
+				listConsumers.push_back(new WindowedThread<Consumer<Document>, LockQueue<Document>>("consumer", input));
+				status << "New consumer " << listConsumers.size() << Window::chars::endl;
 				break;
 
 			case 'p':
-				new WindowedThread<Producer<Document>, LockQueue<Document>>("producer", input);
-				status << "New producer" << Window::chars::endl;
+				listProducers.push_back(new WindowedThread<Producer<Document>, LockQueue<Document>>("producer", input));
+				status << "New producer " << listProducers.size() << Window::chars::endl;
+				break;
+
+			case 'h':
+				status << "Mini help" << Window::chars::endl;
+				status << "  c  new consumer" << Window::chars::endl;
+				status << "  p  new producer" << Window::chars::endl;
+				status << "  n  toggle nop display" << Window::chars::endl;
+				status << "  s  stats" << Window::chars::endl;
+				status << "  q  quit" << Window::chars::endl;
+				status << Window::chars::endl;
+				break;
+
+			case 's':
+				status << "Queue size: " << input.size() << ", ";
+				status << "producers: " << listProducers.size() << ", ";
+				status << "consumers: " << listConsumers.size() << '.' << Window::chars::endl;
+				break;
+
+			case 'n':
+				Consumer<Document>::toggleNop();
+				break;
+
+			case 'q':
+				inside=false;
 				break;
 
 			default:
@@ -442,13 +475,17 @@ int main(int argc, const char* argv[])
 				break;
 		}
 	}
+	for(auto pconsumer : listConsumers)
+	{
+		delete pconsumer;
+	}
+	for(auto pproducer: listProducers)
+	{
+		delete pproducer;
+	}
 
-	// producer.stop(); TODO
-	// consumer.stop(); TODO
+	endwin();
 
-	// thread_prod.join(); TODO
-	// thread_cons.join(); TODO
-	
 	return 0;
 }
 
