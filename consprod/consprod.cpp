@@ -8,6 +8,7 @@
 #include <mutex>
 #include <chrono>
 #include <sstream>
+#include <tuple>
 #include <ncurses.h>
 
 using namespace std;
@@ -21,7 +22,7 @@ class Window
 			endl='\n'
 		};
 
-		Window(pos top, pos left, pos rows, pos columns, const string& title=""); 
+		Window(pos top, pos left, pos rows, pos columns, const string& title="",int color=COLOR_WHITE); 
 		~Window();
 
 		template<typename Type>
@@ -29,8 +30,13 @@ class Window
 		friend Window& operator << (Window&, const chars& c);
 
 		void setTitle(const string&);
+		void setBorderColor(int color);
+
+		static int createColorPair(int, int);
 
 	private:
+		void refresh();
+
 		WINDOW *win;
 		WINDOW *boxw; // ugly use decorator instead
 		pos mtop;
@@ -39,10 +45,28 @@ class Window
 		pos mcols;
 		pos x;
 		pos y;
+		int mPair;
 		static mutex lock;
+		static map<tuple<int,int>,int>	colorPairs;
 };
 
 mutex Window::lock;
+map<tuple<int,int>,int> Window::colorPairs;
+
+int Window::createColorPair(int fg, int bg)
+{
+	auto it=colorPairs.find({fg,bg});
+	if (it == colorPairs.end())
+	{
+		int pair = colorPairs.size()+1;
+		init_pair(pair, fg,bg);
+		colorPairs[{fg,bg}]=pair;
+		cerr << "pair(" << fg << ',' << bg << ") created, newsize=" << colorPairs.size() << endl;
+		return pair;
+	}
+	cerr << "pair(" << fg << ',' << bg << ") found=" << it->second << endl;
+	return it->second;
+}
 
 template<typename Type>
 Window& operator<<(Window& win, const Type& value)
@@ -66,15 +90,18 @@ Window& operator<<(Window& win, const Window::chars& c)
 	return win << (char)c;
 }
 
-Window::Window(pos top, pos left, pos rows, pos columns, const string& title)
+Window::Window(pos top, pos left, pos rows, pos columns, const string& title, int color)
 :
 mtop(top), mleft(left), mrows(rows), mcols(columns), x(0), y(0)
 {
+	// mPair = createColorPair(COLOR_GREEN, COLOR_BLACK);
+	mPair=1;
+	init_pair(1, color, COLOR_BLACK);
+	cerr << "pair(" << color << ")=" << mPair << endl;
 	if (rows<3) rows=3;
 	if (columns<3) columns=3;
 	lock_guard<mutex> lck(lock);
 	boxw = newwin(mrows, mcols, mtop, mleft); 
-	box(boxw, ACS_VLINE, ACS_HLINE);
 	win = newwin(mrows-2, mcols-2, mtop+1, mleft+1); 
 
 	scrollok(win, true);
@@ -86,6 +113,15 @@ void Window::setTitle(const string& sTitle)
 	int x=(mcols-sTitle.length())/2;
 	if (x<0) x=0;
 	mvwprintw(boxw, 0, x, sTitle.c_str());
+	refresh();
+}
+
+
+void Window::refresh()
+{
+	wattron(boxw, mPair);
+	box(boxw, ACS_VLINE, ACS_HLINE);
+	wbkgd(boxw, COLOR_PAIR(mPair));
 	wrefresh(boxw);
 	wrefresh(win);
 }
@@ -385,9 +421,9 @@ template<typename ThreadClass, typename Queue>
 class WindowedThread
 {
 	public:
-		WindowedThread(string title, Queue& input)
+		WindowedThread(string title, Queue& input, int color)
 		{
-			mwin = new Window(placer.top(), placer.left(), height, width, placer.title(title));
+			mwin = new Window(placer.top(), placer.left(), height, width, placer.title(title),color);
 			mthreadClass = new ThreadClass(*mwin, input);
 			placer.next();
 			mpthread = new thread(
@@ -421,8 +457,9 @@ class WindowedThread
 int main(int argc, const char* argv[])
 {
 	initscr();
+	start_color();
 	xy max;
-	Window status(0,0, status_height,max.x, "Status");
+	Window status(0,0, status_height,max.x, "Status", COLOR_GREEN);
 
 	LockQueue<Document>	input;
 	list<WindowedThread<Consumer<Document>, LockQueue<Document>>*> listConsumers;
@@ -437,12 +474,12 @@ int main(int argc, const char* argv[])
 		switch(c)
 		{
 			case 'c':
-				listConsumers.push_back(new WindowedThread<Consumer<Document>, LockQueue<Document>>("consumer", input));
+				listConsumers.push_back(new WindowedThread<Consumer<Document>, LockQueue<Document>>("consumer", input, COLOR_BLUE));
 				status << "New consumer " << listConsumers.size() << Window::chars::endl;
 				break;
 
 			case 'p':
-				listProducers.push_back(new WindowedThread<Producer<Document>, LockQueue<Document>>("producer", input));
+				listProducers.push_back(new WindowedThread<Producer<Document>, LockQueue<Document>>("producer", input, COLOR_RED));
 				status << "New producer " << listProducers.size() << Window::chars::endl;
 				break;
 
