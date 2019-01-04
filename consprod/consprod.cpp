@@ -94,9 +94,7 @@ Window::Window(pos top, pos left, pos rows, pos columns, const string& title, in
 :
 mtop(top), mleft(left), mrows(rows), mcols(columns), x(0), y(0)
 {
-	// mPair = createColorPair(COLOR_GREEN, COLOR_BLACK);
-	mPair=1;
-	init_pair(1, color, COLOR_BLACK);
+	mPair = createColorPair(color, COLOR_BLACK);
 	cerr << "pair(" << color << ")=" << mPair << endl;
 	if (rows<3) rows=3;
 	if (columns<3) columns=3;
@@ -119,7 +117,7 @@ void Window::setTitle(const string& sTitle)
 
 void Window::refresh()
 {
-	wattron(boxw, mPair);
+	wattron(boxw, COLOR_PAIR(mPair));
 	box(boxw, ACS_VLINE, ACS_HLINE);
 	wbkgd(boxw, COLOR_PAIR(mPair));
 	wrefresh(boxw);
@@ -474,7 +472,7 @@ int main(int argc, const char* argv[])
 		switch(c)
 		{
 			case 'c':
-				listConsumers.push_back(new WindowedThread<Consumer<Document>, LockQueue<Document>>("consumer", input, COLOR_BLUE));
+				listConsumers.push_back(new WindowedThread<Consumer<Document>, LockQueue<Document>>("consumer", input, COLOR_CYAN));
 				status << "New consumer " << listConsumers.size() << Window::chars::endl;
 				break;
 
