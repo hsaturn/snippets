@@ -543,7 +543,7 @@ char Keys::pop()
 	lock_guard<mutex> lock(mlock);
 	if (keys.size())
 	{
-		char c(keys.back());
+		char c(keys.front());
 		keys.pop();
 		return c;
 	}
@@ -563,10 +563,25 @@ void mainLoop()
 
 	status << "Threads are running together..." << Window::chars::endl;
 	bool inside(true);
+	const long poll_key_interval=1;
+	const long stats_interval=1000;
+	unsigned long stats=0;
+
+
 	keys.push('h');
 	while(inside)
 	{
 		char c(keys.pop());
+		this_thread::sleep_for(std::chrono::milliseconds(poll_key_interval));
+		if (stats)
+		{
+			stats-=poll_key_interval;
+			if (stats<=0)
+			{
+				keys.push('s');
+				stats+=stats_interval;
+			}
+		}
 		switch(c)
 		{
 			case 0:
@@ -584,6 +599,17 @@ void mainLoop()
 
 			case 'd':
 				Window::toggleDisplay();
+				break;
+
+			case 'S':
+				if (stats)
+				{
+					stats=0;
+				}
+				else
+				{
+					stats=stats_interval;
+				}
 				break;
 
 			case 'C':
@@ -611,7 +637,8 @@ void mainLoop()
 				status << "  c  new consumer        p  new producter" << Window::chars::endl;
 				status << "  C  remove one consumer P  remove one producter" << Window::chars::endl;
 				status << "  d  toggle display      t  toggle nops display" << Window::chars::endl;
-				status << "  q  quit                s  stats" << Window::chars::endl;
+				status << "  s  stats               S  toggle continuous stats" << Window::chars::endl;
+				status << "  q  quit" << Window::chars::endl;
 				status << Window::chars::endl;
 				break;
 
