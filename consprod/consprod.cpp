@@ -32,14 +32,16 @@ class Window
 		void setTitle(const string&);
 		void setBorderColor(int color);
 		void forceDisplay() { mforceDisplay=true; }
+		void clear() { werase(win); wrefresh(win); }
+
+		pos top() const { return mtop; }
+		pos left() const { return mleft; }
+
 
 		static int createColorPair(int, int);
 		static void toggleDisplay() { enable_display = !enable_display; }
 		
-
 	private:
-		void refresh();
-
 		WINDOW *win;
 		WINDOW *boxw; // ugly use decorator instead
 		pos mtop;
@@ -115,15 +117,9 @@ void Window::setTitle(const string& sTitle)
 {
 	int x=(mcols-sTitle.length())/2;
 	if (x<0) x=0;
-	mvwprintw(boxw, 0, x, sTitle.c_str());
-	refresh();
-}
-
-
-void Window::refresh()
-{
 	wattron(boxw, COLOR_PAIR(mPair));
 	box(boxw, ACS_VLINE, ACS_HLINE);
+	mvwprintw(boxw, 0, x, sTitle.c_str());
 	wbkgd(boxw, COLOR_PAIR(mPair));
 	wrefresh(boxw);
 	wrefresh(win);
@@ -133,6 +129,8 @@ Window::~Window()
 {
 	lock_guard<mutex> lck(lock);
 	delwin(win);
+	wclear(boxw);
+	wrefresh(boxw);
 	delwin(boxw);
 }
 
@@ -389,8 +387,15 @@ class WindowPlacer
 		{
 		}
 
-		pos left() const { return mcurx; }
-		pos top() const { return mcury; }
+		pos left() const {
+			if (mfreeSpace.size()) return std::get<1>(mfreeSpace.back());
+			return mcurx;
+		}
+
+		pos top() const {
+			if (mfreeSpace.size()) return std::get<0>(mfreeSpace.back());
+			return mcury;
+		}
 
 		string title(const string& sClass)
 		{
@@ -402,6 +407,11 @@ class WindowPlacer
 		
 		void next()
 		{
+			if (mfreeSpace.size())
+			{
+				mfreeSpace.pop_back();
+				return;
+			}
 			xy max;
 			mcurx += mw+1;
 			if ((int)(mcurx+width) > max.x)
@@ -411,10 +421,16 @@ class WindowPlacer
 			}
 		}
 
+		void freeSpace(Window* win)
+		{
+			mfreeSpace.push_back({win->top(), win->left()});
+		}
+
 	private:
 		pos mw, mh;
 		pos mcurx, mcury;
 		map<string, int> mClasses;
+		list<tuple<Window::pos,Window::pos>> mfreeSpace;
 
 };
 WindowPlacer placer(width,height, status_height);
@@ -439,6 +455,7 @@ class WindowedThread
 		{
 			stop();
 			join();
+			placer.freeSpace(mwin);
 			delete mwin;
 			delete mthreadClass;
 		}
@@ -459,10 +476,9 @@ class WindowedThread
 		thread* mpthread;
 };
 
-int main(int argc, const char* argv[])
+
+void mainLoop()
 {
-	initscr();
-	start_color();
 	xy max;
 	Window status(0,0, status_height,max.x, "Status", COLOR_GREEN);
 	status.forceDisplay();
@@ -480,12 +496,12 @@ int main(int argc, const char* argv[])
 		switch(c)
 		{
 			case 'c':
-				listConsumers.push_back(new WindowedThread<Consumer<Document>, LockQueue<Document>>("consumer", input, COLOR_CYAN));
+				listConsumers.push_back(new WindowedThread<Consumer<Document>, LockQueue<Document>>("Consumer", input, COLOR_CYAN));
 				status << "New consumer " << listConsumers.size() << Window::chars::endl;
 				break;
 
 			case 'p':
-				listProducers.push_back(new WindowedThread<Producer<Document>, LockQueue<Document>>("producer", input, COLOR_RED));
+				listProducers.push_back(new WindowedThread<Producer<Document>, LockQueue<Document>>("Producer", input, COLOR_RED));
 				status << "New producer " << listProducers.size() << Window::chars::endl;
 				break;
 
@@ -493,10 +509,31 @@ int main(int argc, const char* argv[])
 				Window::toggleDisplay();
 				break;
 
+			case 'C':
+				if (listConsumers.size())
+				{
+					delete listConsumers.back();
+					listConsumers.pop_back();
+				}
+				else
+					status << "No more consumer." << Window::chars::endl;
+				break;
+
+			case 'P':
+				if (listProducers.size())
+				{
+					delete listProducers.back();
+					listProducers.pop_back();
+				}
+				else
+					status << "No more producer." << Window::chars::endl;
+				break;
+
 			case 'h':
 				status << "Mini help" << Window::chars::endl;
-				status << "  c  new consumer        d  toggle display" << Window::chars::endl;
-				status << "  p  new producer        t  toggle nops display" << Window::chars::endl;
+				status << "  c  new consumer        p  new producter" << Window::chars::endl;
+				status << "  C  remove one consumer P  remove one producter" << Window::chars::endl;
+				status << "  d  toggle display      t  toggle nops display" << Window::chars::endl;
 				status << "  q  quit                s  stats" << Window::chars::endl;
 				status << Window::chars::endl;
 				break;
@@ -528,10 +565,13 @@ int main(int argc, const char* argv[])
 	{
 		delete pproducer;
 	}
-
-	endwin();
-
-	return 0;
 }
 
 
+int main(int argc, const char* argv[])
+{
+	initscr();
+	start_color();
+	mainLoop();
+	endwin();
+}
