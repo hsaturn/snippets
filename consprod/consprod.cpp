@@ -10,134 +10,15 @@
 #include <sstream>
 #include <tuple>
 #include <algorithm>
-#include <ncurses.h>
+#include <condition_variable>
+#include "console.h"
+
 
 // TODO LIST
 // - limit max size of the queue
 // - use a conditional var and avoid thread_sleep_for
 
 using namespace std;
-
-class Window
-{
-	public:
-		using pos=unsigned int;
-		enum class chars : char
-		{
-			endl='\n'
-		};
-
-		Window(pos top, pos left, pos rows, pos columns, const string& title="",int color=COLOR_WHITE); 
-		~Window();
-
-		template<typename Type>
-		friend Window& operator << (Window&, const Type&);
-		friend Window& operator << (Window&, const chars& c);
-
-		void setTitle(const string&);
-		void setBorderColor(int color);
-		void forceDisplay() { mforceDisplay=true; }
-		void clear() { werase(win); wrefresh(win); }
-
-		pos top() const { return mtop; }
-		pos left() const { return mleft; }
-
-
-		static int createColorPair(int, int);
-		static void toggleDisplay() { enable_display = !enable_display; }
-		
-	private:
-		WINDOW *win;
-		WINDOW *boxw; // ugly use decorator instead
-		pos mtop;
-		pos mleft;
-		pos mrows;
-		pos mcols;
-		pos x;
-		pos y;
-		bool mforceDisplay;
-		int mPair;
-		static mutex lock;
-		static map<tuple<int,int>,int>	colorPairs;
-		static bool enable_display;
-};
-
-mutex Window::lock;
-map<tuple<int,int>,int> Window::colorPairs;
-bool Window::enable_display=true;
-
-int Window::createColorPair(int fg, int bg)
-{
-	auto it=colorPairs.find({fg,bg});
-	if (it == colorPairs.end())
-	{
-		int pair = colorPairs.size()+1;
-		init_pair(pair, fg,bg);
-		colorPairs[{fg,bg}]=pair;
-		return pair;
-	}
-	return it->second;
-}
-
-template<typename Type>
-Window& operator<<(Window& win, const Type& value)
-{
-	if (!win.mforceDisplay && !Window::enable_display) return win;
-	stringstream s;
-	s << value;
-	// mvwprintw(win.win, win.x+1, win.y+1, s.str().c_str());
-
-	lock_guard<mutex> lck(Window::lock);
-	for(char c : s.str())
-	{
-		waddch(win.win,c);
-	}
-	wrefresh(win.win);
-
-	return win;
-}
-
-Window& operator<<(Window& win, const Window::chars& c)
-{
-	return win << (char)c;
-}
-
-Window::Window(pos top, pos left, pos rows, pos columns, const string& title, int color)
-:
-mtop(top), mleft(left), mrows(rows), mcols(columns), x(0), y(0),
-mforceDisplay(false)
-{
-	mPair = createColorPair(color, COLOR_BLACK);
-	if (rows<3) rows=3;
-	if (columns<3) columns=3;
-	lock_guard<mutex> lck(lock);
-	boxw = newwin(mrows, mcols, mtop, mleft); 
-	win = newwin(mrows-2, mcols-2, mtop+1, mleft+1); 
-
-	scrollok(win, true);
-	setTitle(title);
-}
-
-void Window::setTitle(const string& sTitle)
-{
-	int x=(mcols-sTitle.length())/2;
-	if (x<0) x=0;
-	wattron(boxw, COLOR_PAIR(mPair));
-	box(boxw, ACS_VLINE, ACS_HLINE);
-	mvwprintw(boxw, 0, x, sTitle.c_str());
-	wbkgd(boxw, COLOR_PAIR(mPair));
-	wrefresh(boxw);
-	wrefresh(win);
-}
-
-Window::~Window()
-{
-	lock_guard<mutex> lck(lock);
-	delwin(win);
-	wclear(boxw);
-	wrefresh(boxw);
-	delwin(boxw);
-}
 
 template<typename Type>
 class Optional
