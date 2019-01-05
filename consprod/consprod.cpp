@@ -439,6 +439,8 @@ class WindowedThread
 		{
 			stop();
 			join();
+			delete mwin;
+			delete mthreadClass;
 		}
 
 		void stop()
