@@ -9,7 +9,12 @@
 #include <chrono>
 #include <sstream>
 #include <tuple>
+#include <algorithm>
 #include <ncurses.h>
+
+// TODO LIST
+// - limit max size of the queue
+// - use a conditional var and avoid thread_sleep_for
 
 using namespace std;
 
@@ -380,6 +385,7 @@ class WindowPlacer
 {
 	public:
 		using pos=Window::pos;
+		using placementType = tuple<Window::pos, Window::pos>;
 		WindowPlacer(pos width, pos height, pos top)
 		:
 		mw(width), mh(height),
@@ -424,13 +430,15 @@ class WindowPlacer
 		void freeSpace(Window* win)
 		{
 			mfreeSpace.push_back({win->top(), win->left()});
+			mfreeSpace.sort();
+			mfreeSpace.reverse();
 		}
 
 	private:
 		pos mw, mh;
 		pos mcurx, mcury;
 		map<string, int> mClasses;
-		list<tuple<Window::pos,Window::pos>> mfreeSpace;
+		list<placementType> mfreeSpace;
 
 };
 WindowPlacer placer(width,height, status_height);
@@ -448,7 +456,7 @@ class WindowedThread
 			mpthread = new thread(
 				[this]()
 				{ this->mthreadClass->work(); }
-			); // TODO keep thread to join it
+			); // use smart pointers
 		} 
 
 		~WindowedThread()
