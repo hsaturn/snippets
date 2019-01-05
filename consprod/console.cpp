@@ -1,4 +1,5 @@
 #include "console.h"
+#include <iostream>
 #include <ncurses.h>
 
 mutex Window::lock;
@@ -61,3 +62,49 @@ Window::~Window()
 	delwin(boxw);
 }
 
+Keys::Keys()
+{
+	thr=new thread(key_thread,this);
+	thr->detach();
+}
+
+Keys::~Keys()
+{
+}
+
+void Keys::stop()
+{
+	if (thr)
+	{
+		delete thr;
+		thr=0;
+	}
+}
+
+void Keys::key_thread(Keys* keys)
+{
+	for(;;)
+	{
+		char c;
+		cin >> c;
+		keys->push(c);
+	}
+}
+
+void Keys::push(char c)
+{
+	lock_guard<mutex> lock(mlock);
+	keys.push(c);
+}
+
+char Keys::pop()
+{
+	lock_guard<mutex> lock(mlock);
+	if (keys.size())
+	{
+		char c(keys.front());
+		keys.pop();
+		return c;
+	}
+	return 0;
+}

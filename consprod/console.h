@@ -5,6 +5,9 @@
 #include <tuple>
 #include <mutex>
 #include <sstream>
+#include <list>
+#include <thread>
+#include <queue>
 #include <ncurses.h>
 
 using namespace std;
@@ -70,4 +73,93 @@ Window& operator<<(Window& win, const Type& value)
 
 	return win;
 }
+
+struct xy
+{
+	xy() { getmaxyx(stdscr, y,x); }
+	int x;
+	int y;
+};
+
+
+class WindowPlacer
+{
+	public:
+		using pos=Window::pos;
+		using placementType = tuple<Window::pos, Window::pos>;
+		WindowPlacer(pos width, pos height, pos top)
+		:
+		mwidth(width), mh(height),
+		mcurx(0), mcury(top)
+		{
+		}
+
+		pos left() const {
+			if (mfreeSpace.size()) return std::get<1>(mfreeSpace.back());
+			return mcurx;
+		}
+
+		pos top() const {
+			if (mfreeSpace.size()) return std::get<0>(mfreeSpace.back());
+			return mcury;
+		}
+
+		string title(const string& sClass)
+		{
+			mClasses[sClass]++;
+			stringstream s;
+			s << sClass << ' ' << mClasses[sClass];
+			return s.str();
+		}
+		
+		void next()
+		{
+			if (mfreeSpace.size())
+			{
+				mfreeSpace.pop_back();
+				return;
+			}
+			xy max;
+			mcurx += mwidth+1;
+			if ((int)(mcurx+mwidth) > max.x)
+			{
+				mcurx=0;
+				mcury += mh;
+			}
+		}
+
+		void freeSpace(Window* win)
+		{
+			mfreeSpace.push_back({win->top(), win->left()});
+			mfreeSpace.sort();
+			mfreeSpace.reverse();
+		}
+
+	private:
+		pos mwidth, mh;
+		pos mcurx, mcury;
+		map<string, int> mClasses;
+		list<placementType> mfreeSpace;
+
+};
+
+
+
+class Keys
+{
+	public:
+		Keys();
+		~Keys();
+
+		char pop();
+		void push(char c);
+		void stop();
+
+		static void key_thread(Keys*);
+
+	private:
+		mutex mlock;
+		thread* thr;
+		queue<char>	keys;
+};
 

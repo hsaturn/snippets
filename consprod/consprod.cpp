@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <condition_variable>
 #include "console.h"
+#include "optional.h"
 
 
 // TODO LIST
@@ -19,40 +20,6 @@
 // - use a conditional var and avoid thread_sleep_for
 
 using namespace std;
-
-template<typename Type>
-class Optional
-{
-	public:
-		Optional() : mSet(false) { }
-		Optional(Type value) : mSet(true), mValue(value) { }
-		explicit operator bool() const { return mSet; }
-
-		const Type& get() const
-		{
-			if (mSet) return mValue;
-			throw string("Getting an undefined value");
-		}
-
-		template <typename T>
-		friend ostream& operator<< (ostream& out, const Optional<T>&);
-
-		Optional<Type> operator=(const Type value)
-		{
-			mSet = true; mValue = value; return *this;
-		}
-
-		Optional<Type> operator=(const Optional<Type>& opt)
-		{
-			mSet = opt.mSet; mValue = opt.value; return *this;
-		}
-
-
-	
-	private:
-		bool mSet;
-		Type mValue;
-};
 
 template<typename Type, typename Container=std::deque<Type>>
 class LockQueue : protected queue<Type, Container>
@@ -166,12 +133,12 @@ class Producer
 
 template<typename DocumentType>
 Producer<DocumentType>::Producer(Window& win, QueueType& queue, unsigned int pmin, unsigned int pmax)
-:
-mwin(win),
-mQueue(queue),
-active(true),
-period_min(pmin),
-period_max(pmax)
+	:
+	mwin(win),
+	mQueue(queue),
+	active(true),
+	period_min(pmin),
+	period_max(pmax)
 {
 }
 
@@ -215,10 +182,10 @@ bool Consumer<DocumentType>::nop=true;
 
 template<typename DocumentType>
 Consumer<DocumentType>::Consumer(Window& win, QueueType& queue)
-:
-mwin(win),
-mQueue(queue),
-active(true)
+	:
+	mwin(win),
+	mQueue(queue),
+	active(true)
 {}
 
 template<typename DocumentType>
@@ -246,82 +213,10 @@ Window& operator<< (Window& win, const Document& doc)
 	return win << doc.mi;
 }
 
-template<typename T, typename Container>
-void dumpQueue(const LockQueue<T,Container>& input, string header="Queue: ")
-{
-}
-
-struct xy
-{
-	xy() { getmaxyx(stdscr, y,x); }
-	int x;
-	int y;
-};
 
 const int width=15;
 const int height=10;
 const int status_height = 12;
-
-class WindowPlacer
-{
-	public:
-		using pos=Window::pos;
-		using placementType = tuple<Window::pos, Window::pos>;
-		WindowPlacer(pos width, pos height, pos top)
-		:
-		mw(width), mh(height),
-		mcurx(0), mcury(top)
-		{
-		}
-
-		pos left() const {
-			if (mfreeSpace.size()) return std::get<1>(mfreeSpace.back());
-			return mcurx;
-		}
-
-		pos top() const {
-			if (mfreeSpace.size()) return std::get<0>(mfreeSpace.back());
-			return mcury;
-		}
-
-		string title(const string& sClass)
-		{
-			mClasses[sClass]++;
-			stringstream s;
-			s << sClass << ' ' << mClasses[sClass];
-			return s.str();
-		}
-		
-		void next()
-		{
-			if (mfreeSpace.size())
-			{
-				mfreeSpace.pop_back();
-				return;
-			}
-			xy max;
-			mcurx += mw+1;
-			if ((int)(mcurx+width) > max.x)
-			{
-				mcurx=0;
-				mcury += mh;
-			}
-		}
-
-		void freeSpace(Window* win)
-		{
-			mfreeSpace.push_back({win->top(), win->left()});
-			mfreeSpace.sort();
-			mfreeSpace.reverse();
-		}
-
-	private:
-		pos mw, mh;
-		pos mcurx, mcury;
-		map<string, int> mClasses;
-		list<placementType> mfreeSpace;
-
-};
 WindowPlacer placer(width,height, status_height);
 
 
@@ -364,72 +259,6 @@ class WindowedThread
 		Window* mwin;
 		thread* mpthread;
 };
-
-
-class Keys
-{
-	public:
-		Keys();
-		~Keys();
-
-		char pop();
-		void push(char c);
-		void stop();
-
-		static void key_thread(Keys*);
-
-	private:
-		mutex mlock;
-		thread* thr;
-		queue<char>	keys;
-};
-
-Keys::Keys()
-{
-	thr=new thread(key_thread,this);
-	thr->detach();
-}
-
-Keys::~Keys()
-{
-}
-
-void Keys::stop()
-{
-	if (thr)
-	{
-		delete thr;
-		thr=0;
-	}
-}
-
-void Keys::key_thread(Keys* keys)
-{
-	for(;;)
-	{
-		char c;
-		cin >> c;
-		keys->push(c);
-	}
-}
-
-void Keys::push(char c)
-{
-	lock_guard<mutex> lock(mlock);
-	keys.push(c);
-}
-
-char Keys::pop()
-{
-	lock_guard<mutex> lock(mlock);
-	if (keys.size())
-	{
-		char c(keys.front());
-		keys.pop();
-		return c;
-	}
-	return 0;
-}
 
 Keys keys;
 void mainLoop()
