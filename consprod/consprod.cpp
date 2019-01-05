@@ -31,8 +31,11 @@ class Window
 
 		void setTitle(const string&);
 		void setBorderColor(int color);
+		void forceDisplay() { mforceDisplay=true; }
 
 		static int createColorPair(int, int);
+		static void toggleDisplay() { enable_display = !enable_display; }
+		
 
 	private:
 		void refresh();
@@ -45,13 +48,16 @@ class Window
 		pos mcols;
 		pos x;
 		pos y;
+		bool mforceDisplay;
 		int mPair;
 		static mutex lock;
 		static map<tuple<int,int>,int>	colorPairs;
+		static bool enable_display;
 };
 
 mutex Window::lock;
 map<tuple<int,int>,int> Window::colorPairs;
+bool Window::enable_display=true;
 
 int Window::createColorPair(int fg, int bg)
 {
@@ -61,16 +67,15 @@ int Window::createColorPair(int fg, int bg)
 		int pair = colorPairs.size()+1;
 		init_pair(pair, fg,bg);
 		colorPairs[{fg,bg}]=pair;
-		cerr << "pair(" << fg << ',' << bg << ") created, newsize=" << colorPairs.size() << endl;
 		return pair;
 	}
-	cerr << "pair(" << fg << ',' << bg << ") found=" << it->second << endl;
 	return it->second;
 }
 
 template<typename Type>
 Window& operator<<(Window& win, const Type& value)
 {
+	if (!win.mforceDisplay && !Window::enable_display) return win;
 	stringstream s;
 	s << value;
 	// mvwprintw(win.win, win.x+1, win.y+1, s.str().c_str());
@@ -92,10 +97,10 @@ Window& operator<<(Window& win, const Window::chars& c)
 
 Window::Window(pos top, pos left, pos rows, pos columns, const string& title, int color)
 :
-mtop(top), mleft(left), mrows(rows), mcols(columns), x(0), y(0)
+mtop(top), mleft(left), mrows(rows), mcols(columns), x(0), y(0),
+mforceDisplay(false)
 {
 	mPair = createColorPair(color, COLOR_BLACK);
-	cerr << "pair(" << color << ")=" << mPair << endl;
 	if (rows<3) rows=3;
 	if (columns<3) columns=3;
 	lock_guard<mutex> lck(lock);
@@ -399,7 +404,7 @@ class WindowPlacer
 		{
 			xy max;
 			mcurx += mw+1;
-			if (mcurx+width > max.x)
+			if ((int)(mcurx+width) > max.x)
 			{
 				mcurx=0;
 				mcury += mh;
@@ -458,6 +463,7 @@ int main(int argc, const char* argv[])
 	start_color();
 	xy max;
 	Window status(0,0, status_height,max.x, "Status", COLOR_GREEN);
+	status.forceDisplay();
 
 	LockQueue<Document>	input;
 	list<WindowedThread<Consumer<Document>, LockQueue<Document>>*> listConsumers;
@@ -481,13 +487,15 @@ int main(int argc, const char* argv[])
 				status << "New producer " << listProducers.size() << Window::chars::endl;
 				break;
 
+			case 'd':
+				Window::toggleDisplay();
+				break;
+
 			case 'h':
 				status << "Mini help" << Window::chars::endl;
-				status << "  c  new consumer" << Window::chars::endl;
-				status << "  p  new producer" << Window::chars::endl;
-				status << "  n  toggle nop display" << Window::chars::endl;
-				status << "  s  stats" << Window::chars::endl;
-				status << "  q  quit" << Window::chars::endl;
+				status << "  c  new consumer        d  toggle display" << Window::chars::endl;
+				status << "  p  new producer        t  toggle nops display" << Window::chars::endl;
+				status << "  q  quit                s  stats" << Window::chars::endl;
 				status << Window::chars::endl;
 				break;
 
