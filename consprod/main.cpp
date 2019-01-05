@@ -109,6 +109,8 @@ class Producer
 
 		void work();
 
+		static condition_variable cond_var;
+
 	private:
 		Window& mwin;
 		QueueType& mQueue;
@@ -116,6 +118,9 @@ class Producer
 		unsigned int period_min;
 		unsigned int period_max;
 };
+
+template<typename DocumentType>
+condition_variable Producer<DocumentType>::cond_var;
 
 template<typename DocumentType>
 Producer<DocumentType>::Producer(Window& win, QueueType& queue, unsigned int pmin, unsigned int pmax)
@@ -138,8 +143,8 @@ void Producer<DocumentType>::work()
 
 		unsigned int wait_ms=period_min+(rand()%(period_max-period_min));
 		mwin << newDoc << ' ';
-		//mwin << "wait for " << wait_ms << "ms. size=" << mQueue.size() << Window::chars::endl;
 		this_thread::sleep_for(std::chrono::milliseconds(wait_ms));
+		cond_var.notify_all();
 	}
 }
 
@@ -160,11 +165,14 @@ class Consumer
 		QueueType& mQueue;
 		bool active;
 		static bool nop;
+		static mutex sync;
 };
 
 template<typename DocumentType>
 bool Consumer<DocumentType>::nop=true;
 
+template<typename DocumentType>
+mutex Consumer<DocumentType>::sync;
 
 template<typename DocumentType>
 Consumer<DocumentType>::Consumer(Window& win, QueueType& queue)
@@ -177,18 +185,24 @@ Consumer<DocumentType>::Consumer(Window& win, QueueType& queue)
 template<typename DocumentType>
 void Consumer<DocumentType>::work()
 {
-	unsigned long wait_ms=5;
 	while(active)
 	{
-		this_thread::sleep_for(std::chrono::milliseconds(wait_ms));
-		Optional<DocumentType> doc = mQueue.pop();
-		if (doc)
+		unique_lock<mutex> lock(sync);
+		auto status=Producer<DocumentType>::cond_var.wait_until(
+			lock,
+			chrono::system_clock::now() +std::chrono::milliseconds(10));
+
+		if (status == cv_status::no_timeout)
 		{
-			mwin << doc.get() << ' ';
-		}
-		else if (nop)
-		{
-			mwin << "nop ";
+			Optional<DocumentType> doc = mQueue.pop();
+			if (doc)
+			{
+				mwin << doc.get() << ' ';
+			}
+			else if (nop)
+			{
+				mwin << "nop ";
+			}
 		}
 	}
 	mwin << "Consumer end..." << Window::chars::endl;
