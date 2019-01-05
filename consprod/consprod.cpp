@@ -485,6 +485,72 @@ class WindowedThread
 };
 
 
+class Keys
+{
+	public:
+		Keys();
+		~Keys();
+
+		char pop();
+		void push(char c);
+		void stop();
+
+		static void key_thread(Keys*);
+
+	private:
+		mutex mlock;
+		thread* thr;
+		queue<char>	keys;
+};
+
+Keys::Keys()
+{
+	thr=new thread(key_thread,this);
+	thr->detach();
+}
+
+Keys::~Keys()
+{
+}
+
+void Keys::stop()
+{
+	if (thr)
+	{
+		delete thr;
+		thr=0;
+	}
+}
+
+void Keys::key_thread(Keys* keys)
+{
+	for(;;)
+	{
+		char c;
+		cin >> c;
+		keys->push(c);
+	}
+}
+
+void Keys::push(char c)
+{
+	lock_guard<mutex> lock(mlock);
+	keys.push(c);
+}
+
+char Keys::pop()
+{
+	lock_guard<mutex> lock(mlock);
+	if (keys.size())
+	{
+		char c(keys.back());
+		keys.pop();
+		return c;
+	}
+	return 0;
+}
+
+Keys keys;
 void mainLoop()
 {
 	xy max;
@@ -497,12 +563,15 @@ void mainLoop()
 
 	status << "Threads are running together..." << Window::chars::endl;
 	bool inside(true);
+	keys.push('h');
 	while(inside)
 	{
-		char c;
-		cin >> c;
+		char c(keys.pop());
 		switch(c)
 		{
+			case 0:
+				break;
+
 			case 'c':
 				listConsumers.push_back(new WindowedThread<Consumer<Document>, LockQueue<Document>>("Consumer", input, COLOR_CYAN));
 				status << "New consumer " << listConsumers.size() << Window::chars::endl;
@@ -538,7 +607,7 @@ void mainLoop()
 				break;
 
 			case 'h':
-				status << "Mini help" << Window::chars::endl;
+				status << "Help" << Window::chars::endl;
 				status << "  c  new consumer        p  new producter" << Window::chars::endl;
 				status << "  C  remove one consumer P  remove one producter" << Window::chars::endl;
 				status << "  d  toggle display      t  toggle nops display" << Window::chars::endl;
@@ -581,5 +650,6 @@ int main(int argc, const char* argv[])
 	initscr();
 	start_color();
 	mainLoop();
+	keys.stop();
 	endwin();
 }
