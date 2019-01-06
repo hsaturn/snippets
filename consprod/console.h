@@ -36,9 +36,11 @@ class Window
 		pos top() const { return mtop; }
 		pos left() const { return mleft; }
 
+		void refresh();
 
 		static int createColorPair(int, int);
-		static void toggleDisplay() { enable_display = !enable_display; }
+		static bool toggleDisplay() { display_enabled = !display_enabled; return display_enabled; }
+		static bool isDisplayEnabled() { return display_enabled; }
 		
 	private:
 		WINDOW *win;
@@ -51,25 +53,29 @@ class Window
 		pos y;
 		bool mforceDisplay;
 		int mPair;
+		string msTitle;
 		static mutex lock;
 		static map<tuple<int,int>,int>	colorPairs;
-		static bool enable_display;
+		static bool display_enabled;
 };
 
 template<typename Type>
 Window& operator<<(Window& win, const Type& value)
 {
-	if (!win.mforceDisplay && !Window::enable_display) return win;
+	if (!win.mforceDisplay && !Window::display_enabled) return win;
 	stringstream s;
 	s << value;
-	// mvwprintw(win.win, win.x+1, win.y+1, s.str().c_str());
-
-	lock_guard<mutex> lck(Window::lock);
-	for(char c : s.str())
+	if (s.str().length() )
 	{
-		waddch(win.win,c);
+		// mvwprintw(win.win, win.x+1, win.y+1, s.str().c_str());
+
+		lock_guard lck(Window::lock);
+		for(char c : s.str())
+		{
+			waddch(win.win,c);
+		}
+		wrefresh(win.win);
 	}
-	wrefresh(win.win);
 
 	return win;
 }

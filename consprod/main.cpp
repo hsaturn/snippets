@@ -10,14 +10,17 @@
 #include <sstream>
 #include <tuple>
 #include <algorithm>
+#include <atomic>
 #include <condition_variable>
 #include "console.h"
 #include "optional.h"
 
+// TODO remove theses
+static int speed_consumer=10;
+static int speed_producer=10;
 
 // TODO LIST
 // - limit max size of the queue
-// - use a conditional var and avoid thread_sleep_for
 
 using namespace std;
 
@@ -31,7 +34,7 @@ class LockQueue : protected queue<Type, Container>
 
 		const Optional<Type> pop()
 		{
-			lock_guard<mutex> lock(mlock);
+			lock_guard lock(mlock);
 			if (this->size_nolock())
 			{
 				Optional<Type> t=this->back();
@@ -48,7 +51,7 @@ class LockQueue : protected queue<Type, Container>
 		friend ostream& operator<< (ostream& out, const LockQueue<T,container>& input)
 		{
 			size_t size=input.size();
-			lock_guard<mutex> lock(input.mlock);
+			lock_guard lock(input.mlock);
 			for(const auto& document: input)
 			{
 				out << document.i() << ' ';
@@ -57,15 +60,16 @@ class LockQueue : protected queue<Type, Container>
 			return out;
 		}
 
-		void push(Type t)
+		size_t push(Type t)
 		{
-			lock_guard<mutex> lock(mlock);
+			lock_guard lock(mlock);
 			parent::push(t);
+			return parent::size();
 		}
 
 		size_t size() const
 		{
-			lock_guard<mutex> lock(mlock);
+			lock_guard lock(mlock);
 			return parent::size();
 		}
 
@@ -89,14 +93,18 @@ class Document
 
 		friend Window& operator << (Window& out, const Document& doc);
 
-		static Document generateRandom()
+		static Document next()
 		{
-			return rand() % 1000;
+			return msi++;
+			//return rand() % 1000;
 		}
 
 	private:
 		int mi;
+		static atomic<int> msi;
 };
+
+atomic<int> Document::msi=0;
 
 template<typename DocumentType>
 class Producer
@@ -138,13 +146,22 @@ void Producer<DocumentType>::work()
 {
 	while(active)
 	{
-		DocumentType newDoc = DocumentType::generateRandom();
-		mQueue.push(newDoc);
+		DocumentType newDoc = DocumentType::next();
+		mwin << newDoc << ' ';
+		if (mQueue.push(newDoc) == 1)
+		{
+			cond_var.notify_one();
+			mwin << "one\n";
+		}
+		else
+		{
+			cond_var.notify_all();
+			mwin << "all\n";
+		}
+
 
 		unsigned int wait_ms=period_min+(rand()%(period_max-period_min));
-		mwin << newDoc << ' ';
-		this_thread::sleep_for(std::chrono::milliseconds(wait_ms));
-		cond_var.notify_all();
+		this_thread::sleep_for(std::chrono::milliseconds(wait_ms*speed_producer));
 	}
 }
 
@@ -187,10 +204,10 @@ void Consumer<DocumentType>::work()
 {
 	while(active)
 	{
-		unique_lock<mutex> lock(sync);
+		unique_lock lock(sync);
 		auto status=Producer<DocumentType>::cond_var.wait_until(
 			lock,
-			chrono::system_clock::now() +std::chrono::milliseconds(10));
+			chrono::system_clock::now() +std::chrono::milliseconds(10*speed_consumer));
 
 		if (status == cv_status::no_timeout)
 		{
@@ -225,8 +242,10 @@ class WindowedThread
 {
 	public:
 		WindowedThread(string title, Queue& input, int color)
+		: mNormalBorderColor(color)
 		{
-			mwin = new Window(placer.top(), placer.left(), height, width, placer.title(title),color);
+			mwin = new Window(placer.top(), placer.left(), height, width, placer.title(title));
+			updateWinBorder();
 			mthreadClass = new ThreadClass(*mwin, input);
 			placer.next();
 			mpthread = new thread(
@@ -244,6 +263,11 @@ class WindowedThread
 			delete mthreadClass;
 		}
 
+		void updateWinBorder()
+		{
+			mwin->setBorderColor(Window::isDisplayEnabled() ? mNormalBorderColor : COLOR_WHITE);
+		}
+
 		void stop()
 		{
 			mthreadClass->stop();
@@ -258,7 +282,16 @@ class WindowedThread
 		ThreadClass* mthreadClass;
 		Window* mwin;
 		thread* mpthread;
+		int mNormalBorderColor;
 };
+
+void modifySpeed(Window& status, string what, int& speed, int delta)
+{
+	speed -= delta;
+	if (speed<1) speed=1;
+	if (speed>100) speed=100;
+	status << "Speed of next " << what << " is now " << 101-speed << '\n';
+}
 
 Keys keys;
 void mainLoop()
@@ -281,8 +314,8 @@ void mainLoop()
 	keys.push('h');
 	while(inside)
 	{
-		char c(keys.pop());
 		this_thread::sleep_for(std::chrono::milliseconds(poll_key_interval));
+		char c(keys.pop());
 		if (stats)
 		{
 			stats-=poll_key_interval;
@@ -308,7 +341,15 @@ void mainLoop()
 				break;
 
 			case 'd':
-				Window::toggleDisplay();
+				// TODO strange bug there it happens when playing with d/c/p keys
+				// that sometime, windows of producers appear disabled (white border) when consumers
+				// windows have a normal border (cyan). Maybe a race condition occurs there
+				// See the race_bug.png file (display is enabled)
+				{
+					Window::toggleDisplay();
+					for(auto wt: listConsumers) wt->updateWinBorder();
+					for(auto wt: listProducers) wt->updateWinBorder();
+				}
 				break;
 
 			case 'S':
@@ -346,10 +387,27 @@ void mainLoop()
 				status << "Help" << Window::chars::endl;
 				status << "  c  new consumer        p  new producter" << Window::chars::endl;
 				status << "  C  remove one consumer P  remove one producter" << Window::chars::endl;
-				status << "  d  toggle display      t  toggle nops display" << Window::chars::endl;
+				status << "  d  toggle display      n  toggle nops display" << Window::chars::endl;
 				status << "  s  stats               S  toggle continuous stats" << Window::chars::endl;
+				status << "  < > / + -              decrease increase speed of producers/consumers" << Window::chars::endl;
 				status << "  q  quit" << Window::chars::endl;
 				status << Window::chars::endl;
+				break;
+
+			case '<':
+				modifySpeed(status,"producers", speed_producer, -1);
+				break;
+
+			case '>':
+				modifySpeed(status,"producers", speed_producer, 1);
+				break;
+
+			case '-':
+				modifySpeed(status,"consumers", speed_producer, -1);
+				break;
+
+			case '+':
+				modifySpeed(status,"consumers", speed_producer, 1);
 				break;
 
 			case 's':
@@ -371,12 +429,17 @@ void mainLoop()
 				break;
 		}
 	}
+	for(auto wt: listConsumers) wt->stop();
+	for(auto wt: listProducers) wt->stop();
+	status << "All stopped, deleting...\n";
 	for(auto pconsumer : listConsumers)
 	{
 		delete pconsumer;
 	}
+	int i=0;
 	for(auto pproducer: listProducers)
 	{
+		status << "Producer deleted " << i++ << Window::chars::endl;
 		delete pproducer;
 	}
 }
@@ -384,6 +447,11 @@ void mainLoop()
 
 int main(int argc, const char* argv[])
 {
+	if (argc>1)
+	{
+		for(const char* p=argv[0]; *p; p++)
+			keys.push(*p);
+	}
 	initscr();
 	start_color();
 	mainLoop();

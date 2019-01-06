@@ -3,11 +3,14 @@
 #include <ncurses.h>
 
 mutex Window::lock;
-map<tuple<int,int>,int> Window::colorPairs;
-bool Window::enable_display=true;
+bool Window::display_enabled=true;
 
 int Window::createColorPair(int fg, int bg)
 {
+	static map<tuple<int,int>,int>	colorPairs;
+	static mutex lck_pairs;
+	lock_guard lock(lck_pairs);
+
 	auto it=colorPairs.find({fg,bg});
 	if (it == colorPairs.end())
 	{
@@ -30,32 +33,51 @@ Window::Window(pos top, pos left, pos rows, pos columns, const string& title, in
 mtop(top), mleft(left), mrows(rows), mcols(columns), x(0), y(0),
 mforceDisplay(false)
 {
-	mPair = createColorPair(color, COLOR_BLACK);
-	if (rows<3) rows=3;
-	if (columns<3) columns=3;
-	lock_guard<mutex> lck(lock);
-	boxw = newwin(mrows, mcols, mtop, mleft); 
-	win = newwin(mrows-2, mcols-2, mtop+1, mleft+1); 
+	{
+		lock_guard lck(lock);
+		if (rows<3) rows=3;
+		if (columns<3) columns=3;
+		boxw = newwin(mrows, mcols, mtop, mleft); 
+		win = newwin(mrows-2, mcols-2, mtop+1, mleft+1); 
 
-	scrollok(win, true);
-	setTitle(title);
+		setBorderColor(color);
+		scrollok(win, true);
+		setTitle(title);
+	}
+	refresh();
+}
+
+void Window::setBorderColor(int color)
+{
+	mPair = createColorPair(color, COLOR_BLACK);
+	refresh();
 }
 
 void Window::setTitle(const string& sTitle)
 {
-	int x=(mcols-sTitle.length())/2;
-	if (x<0) x=0;
-	wattron(boxw, COLOR_PAIR(mPair));
-	box(boxw, ACS_VLINE, ACS_HLINE);
-	mvwprintw(boxw, 0, x, sTitle.c_str());
-	wbkgd(boxw, COLOR_PAIR(mPair));
-	wrefresh(boxw);
-	wrefresh(win);
+	msTitle=sTitle;
+	refresh();
+}
+
+void Window::refresh()
+{
+	unique_lock lck(lock, try_to_lock);
+	if (lck.owns_lock())
+	{
+		wbkgd(boxw, COLOR_PAIR(mPair));
+		box(boxw, ACS_VLINE, ACS_HLINE);
+		int x=(mcols-msTitle.length())/2;
+		if (x<0) x=0;
+		mvwprintw(boxw, 0, x, msTitle.c_str());
+		wrefresh(boxw);
+		touchwin(win);
+		wrefresh(win);
+	}
 }
 
 Window::~Window()
 {
-	lock_guard<mutex> lck(lock);
+	lock_guard lck(lock);
 	delwin(win);
 	wclear(boxw);
 	wrefresh(boxw);
@@ -93,13 +115,13 @@ void Keys::key_thread(Keys* keys)
 
 void Keys::push(char c)
 {
-	lock_guard<mutex> lock(mlock);
+	lock_guard lock(mlock);
 	keys.push(c);
 }
 
 char Keys::pop()
 {
-	lock_guard<mutex> lock(mlock);
+	lock_guard lock(mlock);
 	if (keys.size())
 	{
 		char c(keys.front());
