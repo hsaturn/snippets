@@ -1,2 +1,5 @@
 #!/bin/bash
-setup/skel/skel $*
+
+SKEL=$(dirname $PWD/$0)
+echo "($SKEL)"
+$SKEL/setup/skel/skel $*
