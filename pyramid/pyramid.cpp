@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <time.h>
 
+
 const int MAXS=30;
 
 using namespace std;
