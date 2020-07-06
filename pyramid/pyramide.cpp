@@ -20,17 +20,17 @@ struct value_info
 	int _value;
 };
 
-class data
+class pyramid
 {
 	public:
-		data(int base) : _base(base)
+		pyramid(int base) : _base(base)
    	{
 			for(int i=0; i<base; i++)
 				for(int j=0; j<base-i; j++)
 					_data[i][j]=-1;
 	  }
 
-		friend ostream& operator << (ostream& out, const data &pyr)
+		friend ostream& operator << (ostream& out, const pyramid &pyr)
 		{
 			std::string sep=" ";
 			int maxs=1;
@@ -133,7 +133,7 @@ class data
 
 		bool can_be_solved() const
 		{
-			data solving(*this);
+			pyramid solving(*this);
 			return solving.solve();
 		}
 
@@ -271,7 +271,7 @@ int main(int argc, char* argv[])
 
 	int tries=0;
 	int min=99999999;
-	data d(base);
+	pyramid d(base);
 	do
 	{
 		d.erase();
@@ -302,7 +302,7 @@ int main(int argc, char* argv[])
 	d.solve();
 	cout << d << endl;
 
-	data e(d);
+	pyramid e(d);
 	tries=0;
 	value_info v;
 	while(true)
@@ -324,7 +324,7 @@ int main(int argc, char* argv[])
 	cout << e << endl;
 	while(anim && !e.is_complete())
 	{
-		usleep(1000000);
+		sleep(1);
 		e.solve(1);
 		cout << e << endl;
 	}
