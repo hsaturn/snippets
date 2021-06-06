@@ -6,7 +6,7 @@ BUILD_OBJS=$(addprefix $(BUILD_DIR)/, $(SRC:.cpp=.o))
 LINKER=g++ $(OPTS)
 LINK_POSTOPT=-pthread
 COMPILER=g++
-TARGET=ad_3
+TARGET=ad_2
 
 all: build_dir $(TARGET)
 
@@ -29,7 +29,7 @@ clean:
 	-rm -f $(BUILD_DIR)/*.o
 	-rm -f $(BUILD_DIR)/*.d
 	-rmdir $(BUILD_DIR)
-	-rm -f ad_3
+	-rm -f ad_2
 
 mrproper: clean
 	rm -f $(TARGET)

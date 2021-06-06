@@ -1,3 +1,4 @@
 #!/bin/sh
 make
-cat ../ad_1/input | ./ad_2
+cat input | ./ad_3
+
