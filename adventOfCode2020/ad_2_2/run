@@ -1,0 +1,4 @@
+#!/bin/sh
+make
+cat input | ./ad_2_2
+
