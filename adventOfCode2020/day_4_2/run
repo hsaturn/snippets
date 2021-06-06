@@ -1,0 +1,3 @@
+#!/bin/sh
+make
+cat ../day_4_1/input | ./day_4_2
