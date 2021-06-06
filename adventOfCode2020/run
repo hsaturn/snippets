@@ -1,18 +1,18 @@
 #!/bin/sh
 echo
-for day in ad_*; do
+for day in day_*; do
   echo -n "Building $day ...\r"
   make -C $day >/dev/null
 done
 echo "---- ALL BUILT ---"
 
-for day in ad_*; do
+for day in day_*; do
   echo
   echo "DAY $day"
   cd $day && ./run && cd - >/dev/null
 done
 
-for day in ad_*; do
+for day in day_*; do
   make -C $day clean >/dev/null
 done
 
