@@ -1,0 +1,6 @@
+#!/bin/sh
+for day in ad_*; do
+  echo
+  echo "DAY $day"
+  cd $day && ./run && cd - >/dev/null
+done
