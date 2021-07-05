@@ -11,6 +11,9 @@ namespace ansi
 	const char* savepos="\033[s";
 	const char* restorepos="\033[u";
 
+	const char* hide_cur="\033[?25l";
+	const char* show_cur="\033[?25h";
+
 	const char* black="\033[30m";
 	const char* red="\033[31m";
 	const char* green="\033[32m";
