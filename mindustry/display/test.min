@@ -1,0 +1,20 @@
+start:
+set char_loop 32
+main_loop:
+set char char_loop
+set cur_x 1
+draw clear 0 0 0
+draw color 255 255 255
+loop:
+op add _draw_char_return @counter 1
+set @counter _drawChar
+op add char char 1
+jump okchar lessThan char 128
+set char 32
+okchar:
+jump loop lessThan cur_x 180
+drawflush display1
+op add char_loop char_loop 1
+jump main_loop lessThan char_loop 127
+jump start always
+
