@@ -1,0 +1,24 @@
+jump _draw_num_positive greaterThanEq ${n} 0
+set ${char} 45
+op add _draw${char}_return @counter 1
+set @counter _drawChar
+op sub ${n} 0 ${n}
+_draw_num_positive:
+op log10 _div ${n}
+op floor _div _div
+op pow _div 10 _div
+_draw_num_loop:
+op idiv _digit ${n} _div
+op add ${char} _digit 48
+op add _draw${char}_return @counter 1
+set @counter _drawChar
+op mul _digit _digit _div
+op sub ${n} ${n} _digit
+op idiv _div _div 10
+jump _draw_num_loop greaterThan _div 0
+set @counter _draw_num_return
+_draw_num_end:
+
+loop: op add n n 1
+jump loop always
+

@@ -1,0 +1,28 @@
+op add _drawNum @counter 1
+jump draw_num_end always
+jump draw_num_positive greaterThanEq i 0
+set char 45
+op add _draw_char_return @counter 1
+set @counter _drawChar
+op sub i 0 i
+draw_num_positive:
+op log10 _div i
+op floor _div _div
+op pow _div 10 _div
+draw_num_loop:
+op idiv _digit i _div
+op add char _digit 48
+op add _draw_char_return @counter 1
+set @counter _drawChar
+op mul _digit _digit _div
+op sub i i _digit
+op idiv _div _div 10
+jump draw_num_loop greaterThan _div 0
+set @counter _draw_num_return
+draw_num_end:
+loop:
+set i 12345
+op add _draw_num_return @counter 1
+set @counter _drawNum
+jump loop always
+

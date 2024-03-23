@@ -8,7 +8,14 @@ LINK_POSTOPT=-pthread
 COMPILER=g++
 TARGET=display
 
-all: build_dir $(TARGET)
+all: build_dir $(TARGET) display.min
+
+display.min: build_dir $(TARGET)
+	./display charset.14 > display.min
+
+test: all
+	./display charset.14 > display.min
+	cat test.min >> display.min
 
 run: $(TARGET)
 	./$(TARGET)
