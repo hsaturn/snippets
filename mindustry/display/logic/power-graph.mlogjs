@@ -1,0 +1,918 @@
+// const array = new MutableArray([1, 2, 3, 4, 5]);
+
+// double a random item in the array
+// const index = Math.floor(Math.rand(array.size));
+var version="Power Graph 20240323-1"
+var nbars = 12;
+var factor = 0;
+if (Vars.ipt > 4) {
+    nbars = 32;
+    factor = 0.1;
+}
+
+var node;
+var display;
+var size;
+var message;
+var memory;
+
+for (let i = Vars.links - 1; i >= 0; i--) {
+    let link = getLink(i);
+    let ltype = link.type;
+    print(ltype, "\n");
+
+    if (ltype == Blocks.logicDisplay) {
+        print("Display found\n");
+        size = 80;
+        display = link;
+    }
+    else if (ltype == Blocks.largeLogicDisplay) {
+        print("Disqplay found\n");
+        size = 176;
+        display = link;
+    }
+    else if (ltype == Blocks.powerNode | ltype == Blocks.powerNodeLarge) {
+        print("Node found\n");
+        node = link;
+    }
+    else if (ltype == Blocks.message) {
+        print(version);
+        print("Message found\n");
+        message = link;
+    }
+    else if (ltype == Blocks.memoryCell | ltype == Blocks.memoryBank) {
+        print("Memory found\n");
+        memory = link;
+    }
+}
+printFlush(message);
+
+var scale = size / 80;
+var font_width;
+var font_height;
+var font_width_base = 8 * scale;
+var font_height_base = font_width_base * 1.1;
+
+var font_hspace = 1;
+var font_skew = 0;
+var font_stroke = 2 * scale;
+
+var cur_x = 0;
+var cur_y = 0;
+
+var zero = size / 2;
+var barw = 10 * scale;
+var left = size - barw;
+
+function drawPos(x, y) {
+    cur_x = x;
+    cur_y = y;
+}
+
+var links = Vars.links;
+
+var ptr = 0;
+var max_power = 0;
+var max_capacity = 0;
+var ech_width = (size - barw) / nbars;
+if (ech_width <= 0)
+    ech_width = 1;
+
+const ech = new Memory(memory, 64);
+for (let i = 0; i < 32; i++)
+    ech[i] = zero;
+for (let i = 32; i < 64; i++)
+    ech[i] = 0;
+
+var power = 0;
+var hbars = 7;
+var dybars = size / (1 + hbars);
+
+while (true) {
+    var capacity = node.powerNetCapacity;
+    var stored = node.powerNetStored;
+    font_width = font_width_base;
+    font_height = font_height_base;
+    font_hspace = font_width / 4 + font_stroke;
+    max_power = max_power * 0.9999;
+
+    draw.clear(0, 0, 0);
+
+    var p = node.powerNetIn - node.powerNetOut;
+    power = power * factor + (1 - factor) * p;
+    var apower = Math.abs(p);
+    if (apower > max_power)
+        max_power = apower;
+    var power_dy = power / max_power * zero;
+
+    // Draw graphss
+    var ptr2 = ptr + 32;
+    ech[ptr] = zero + power_dy;
+    ech[ptr + 32] = size * stored / capacity;
+    ptr = (ptr + 1) % nbars;
+
+    var cur = size - 1 - barw;
+    var last_cur = cur;
+    var last_y = ech[ptr % nbars];
+    draw.stroke(2);
+    var wcap = -ech_width - 1;
+    while (cur >= -1) {
+        var m32 = (ptr2 % nbars);
+        var yy = ech[m32];
+        var cap = ech[32 + m32];
+        draw.color(80, 80, 80);
+        draw.rect({
+            x: cur,
+            y: 0,
+            width: wcap,
+            height: cap
+        });
+
+        if (last_y >= zero)
+            draw.color(0, 128, 0);
+        else
+            draw.color(128, 0, 0);
+
+        draw.line({
+            x: last_cur,
+            y: last_y,
+            x2: cur,
+            y2: yy
+        });
+
+        last_cur = cur;
+        last_y = yy;
+        ptr2 = ptr2 - 1;
+        cur -= ech_width;
+    }
+
+    // Draw power bar and numeric power    
+    var num;
+    if (power < 0) {
+        num = -power;
+        draw.color(255, 0, 0);
+    }
+    else {
+        num = power;
+        draw.color(0, 255, 0);
+    }
+    draw.rect({ x: left , y: zero, width: barw, height: power_dy });
+
+    if (power < 0)
+        draw.color(255, 32, 32);
+
+    // Draw numeric value of power
+    var back = 2 * (font_width + font_hspace);
+    cur_x = left - 10 * scale - font_width;
+    cur_y = size - font_height * 1.8;
+    var dot = 0;
+
+    if (num > 2000) {
+        drawChar(75);   // display K 
+        num = Math.idiv(num, 100);
+        cur_x -= back;
+        dot = 2;
+    }
+    var digit;
+    
+    do {
+        if (dot == 1)
+            digit = 46
+        else {
+            digit = (num % 10) + 48;
+            num = Math.idiv(num, 10);
+        }
+        dot = dot - 1;
+        drawChar(digit);
+        cur_x -= back;
+    } while (num);
+
+    // Draw numeric value of capacity
+    draw.color(0, 255, 255);
+    font_width = 6 * scale;
+    font_height = 8 * scale;
+    font_hspace = font_width / 4 + font_stroke;
+    back = 2 * (font_width + font_hspace);
+    cur_x = left - 10 * scale - font_width;
+    cur_y = 10 * scale;
+    dot = 0;
+    num = stored;
+
+    if (num > 9000000) {
+        drawChar(77);   // display M 
+        num = Math.idiv(num, 100000);
+        cur_x -= back;
+        dot = 2;
+    }
+    else if (num > 1000000) {
+        drawChar(77);   // display M 
+        num = Math.idiv(num, 10000);
+        cur_x -= back;
+        dot = 3;
+    }
+    else if (num > 2000) {
+        drawChar(75);   // display K 
+        num = Math.idiv(num, 100);
+        cur_x -= back;
+        dot = 2;
+    }
+
+    do {
+        if (dot == 1)
+            digit = 46
+        else {
+            digit = (num % 10) + 48;
+            num = Math.idiv(num, 10);
+        }
+        dot = dot - 1;
+        drawChar(digit);
+        cur_x -= back;
+    } while (num);    
+
+    // Draw white lines
+    draw.color(255, 255, 255);
+    draw.stroke(scale);
+    var y = dybars;
+    while (y < size) {
+        draw.line({
+            x: left + 5*scale,
+            y: y,
+            x2: size,
+            y2: y
+        });
+
+        y += dybars;
+    }
+    draw.stroke(2*scale);
+    draw.line({ x: left+2, y: zero, x2: size, y2: zero });
+    draw.stroke(scale);
+    draw.line({ x: left, y: 0, x2: left, y2: size });
+    draw.color(128, 128, 128);
+    draw.line({ x: 0, y: zero, x2: left-scale, y2: zero });
+
+    drawFlush(display);
+    if (Vars.links != links) endScript();
+}
+
+function configInt(cfg) {
+    var v = cfg.config;
+    if (v == Items.copper) return 0;
+    if (v == Items.lead) return 1;
+    if (v == Items.metaglass) return 2;
+    if (v == Items.graphite) return 3;
+    if (v == Items.sand) return 4;
+    if (v == Items.coal) return 5;
+    if (v == Items.graphite) return 6;
+    if (v == Items.thorium) return 7;
+    if (v == Items.scrap) return 8;
+    if (v == Items.silicon) return 9;
+    if (v == Items.plastanium) return 10;
+    if (v == Items.phaseFabric) return 11;
+    if (v == Items.surgeAlloy) return 12;
+    if (v == Items.sporePod) return 13;
+    if (v == Items.blastCompound) return 14;
+    if (v == Items.pyratite) return 15;
+}
+
+function drawNumber(n) {
+    print("draw ", n, "\n");
+    if (n < 0) {
+        drawChar(45);
+        n = -n;
+    }
+    var _div = Math.pow(10, Math.floor(Math.log10(n)));
+    do {
+        var _digit = Math.idiv(n, _div) + 48;
+        print(_digit, "\n");
+        drawChar(_digit);
+        n = n - _digit * _div;
+        _div = _div / 10;
+    } while (_div > 0);
+
+}
+
+function drawChar(char) {
+    asm`op div _sk2 ${font_skew} 2`;
+    asm`jump draw_char_advance lessThan ${char} 32`;
+    asm`jump draw_char_advance greaterThan ${char} 128`;
+    asm`op add _xs ${cur_x} _sk2`;
+    asm`op add _xss ${cur_x} ${font_skew}`;
+    asm`op div _x2 ${font_width} 2`;
+    asm`op add _x2 _x2 ${cur_x}`;
+    asm`op add _x2s _x2 _sk2`;
+    asm`op add _x2ss _x2 ${font_skew}`;
+    asm`op add _x3 ${cur_x} ${font_width}`;
+    asm`op add _x3s _x3 _sk2`;
+    asm`op add _x3ss _x3 ${font_skew}`;
+    asm`op div _y2 ${font_height} 2`;
+    asm`op add _y2 _y2 ${cur_y}`;
+    asm`op add _y3 ${cur_y} ${font_height}`;
+    asm`draw stroke ${font_stroke}`;
+    asm`op sub _char ${char} 31`;
+    asm`op add _char _char @counter`;
+    asm`set @counter _char`;
+    asm`jump drawChar_32 always`;
+    asm`jump drawChar_33 always`;
+    asm`jump drawChar_34 always`;
+    asm`jump drawChar_35 always`;
+    asm`jump drawChar_36 always`;
+    asm`jump drawChar_37 always`;
+    asm`jump drawChar_38 always`;
+    asm`jump drawChar_39 always`;
+    asm`jump drawChar_40 always`;
+    asm`jump drawChar_41 always`;
+    asm`jump drawChar_42 always`;
+    asm`jump drawChar_43 always`;
+    asm`jump drawChar_44 always`;
+    asm`jump drawChar_45 always`;
+    asm`jump drawChar_46 always`;
+    asm`jump drawChar_47 always`;
+    asm`jump drawChar_48 always`;
+    asm`jump drawChar_49 always`;
+    asm`jump drawChar_50 always`;
+    asm`jump drawChar_51 always`;
+    asm`jump drawChar_52 always`;
+    asm`jump drawChar_53 always`;
+    asm`jump drawChar_54 always`;
+    asm`jump drawChar_55 always`;
+    asm`jump drawChar_56 always`;
+    asm`jump drawChar_57 always`;
+    asm`jump drawChar_58 always`;
+    asm`jump drawChar_59 always`;
+    asm`jump drawChar_60 always`;
+    asm`jump drawChar_61 always`;
+    asm`jump drawChar_62 always`;
+    asm`jump drawChar_63 always`;
+    asm`jump drawChar_64 always`;
+    asm`jump drawChar_65 always`;
+    asm`jump drawChar_66 always`;
+    asm`jump drawChar_67 always`;
+    asm`jump drawChar_68 always`;
+    asm`jump drawChar_69 always`;
+    asm`jump drawChar_70 always`;
+    asm`jump drawChar_71 always`;
+    asm`jump drawChar_72 always`;
+    asm`jump drawChar_73 always`;
+    asm`jump drawChar_74 always`;
+    asm`jump drawChar_75 always`;
+    asm`jump drawChar_76 always`;
+    asm`jump drawChar_77 always`;
+    asm`jump drawChar_78 always`;
+    asm`jump drawChar_79 always`;
+    asm`jump drawChar_80 always`;
+    asm`jump drawChar_81 always`;
+    asm`jump drawChar_82 always`;
+    asm`jump drawChar_83 always`;
+    asm`jump drawChar_84 always`;
+    asm`jump drawChar_85 always`;
+    asm`jump drawChar_86 always`;
+    asm`jump drawChar_87 always`;
+    asm`jump drawChar_88 always`;
+    asm`jump drawChar_89 always`;
+    asm`jump drawChar_90 always`;
+    asm`jump drawChar_91 always`;
+    asm`jump drawChar_92 always`;
+    asm`jump drawChar_93 always`;
+    asm`jump drawChar_94 always`;
+    asm`jump drawChar_95 always`;
+    asm`jump drawChar_96 always`;
+    asm`jump drawChar_97 always`;
+    asm`jump drawChar_98 always`;
+    asm`jump drawChar_99 always`;
+    asm`jump drawChar_100 always`;
+    asm`jump drawChar_101 always`;
+    asm`jump drawChar_102 always`;
+    asm`jump drawChar_103 always`;
+    asm`jump drawChar_104 always`;
+    asm`jump drawChar_105 always`;
+    asm`jump drawChar_106 always`;
+    asm`jump drawChar_107 always`;
+    asm`jump drawChar_108 always`;
+    asm`jump drawChar_109 always`;
+    asm`jump drawChar_110 always`;
+    asm`jump drawChar_111 always`;
+    asm`jump drawChar_112 always`;
+    asm`jump drawChar_113 always`;
+    asm`jump drawChar_114 always`;
+    asm`jump drawChar_115 always`;
+    asm`jump drawChar_116 always`;
+    asm`jump drawChar_117 always`;
+    asm`jump drawChar_118 always`;
+    asm`jump drawChar_119 always`;
+    asm`jump drawChar_120 always`;
+    asm`jump drawChar_121 always`;
+    asm`jump drawChar_122 always`;
+    asm`jump drawChar_123 always`;
+    asm`jump drawChar_124 always`;
+    asm`jump drawChar_125 always`;
+    asm`jump drawChar_126 always`;
+    asm`jump drawChar_127 always`;
+    asm`jump drawChar_128 always`;
+    asm`drawChar_32:`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_33:`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`op add _draw_char_x3 _x3 ${font_skew}`;
+    asm`op sub _draw_char_x4 _draw_char_x3 1`;
+    asm`draw line _draw_char_x3 ${cur_y} _draw_char_x4 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_34:`;
+    asm`draw line _x3ss _y3 _x3s _y2`;
+    asm`draw line _x2ss _y3 _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_35:`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`draw line _x2ss _y3 _x2 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_36:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line _x3s _y2 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _xss _y3 _xs _y2`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`draw line _x2ss _y3 _x2 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_37:`;
+    asm`draw line _x3s _y2 _x3 ${cur_y}`;
+    asm`draw line _xss _y3 _xs _y2`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`draw line _xss _y3 _x3 ${cur_y}`;
+    asm`draw line _x2ss _y3 _x2 ${cur_y}`;
+    asm`draw line _x3ss _y3 ${cur_x} ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_38:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _xs _y2 ${cur_x} ${cur_y}`;
+    asm`draw line _xs _y2 _x2s _y2`;
+    asm`draw line _xss _y3 _x3 ${cur_y}`;
+    asm`draw line _x2ss _y3 _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_39:`;
+    asm`draw line _x2ss _y3 _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_40:`;
+    asm`draw line _x3ss _y3 _x2s _y2`;
+    asm`draw line _x2s _y2 _x3 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_41:`;
+    asm`draw line _xss _y3 _x2s _y2`;
+    asm`draw line ${cur_x} ${cur_y} _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_42:`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`draw line _xss _y3 _x3 ${cur_y}`;
+    asm`draw line _x2ss _y3 _x2 ${cur_y}`;
+    asm`draw line _x3ss _y3 ${cur_x} ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_43:`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`draw line _x2ss _y3 _x2 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_44:`;
+    asm`draw line ${cur_x} ${cur_y} _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_45:`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_46:`;
+    asm`op add _draw_char_x3 _x3 ${font_skew}`;
+    asm`op sub _draw_char_x4 _draw_char_x3 1`;
+    asm`draw line _draw_char_x3 ${cur_y} _draw_char_x4 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_47:`;
+    asm`draw line _x3ss _y3 ${cur_x} ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_48:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`draw line _x3ss _y3 ${cur_x} ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_49:`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line _x3ss _y3 _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_50:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line _x3ss _y3 _x3s _y2`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _xs _y2 ${cur_x} ${cur_y}`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_51:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _x2s _y2 _x3s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_52:`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line _xss _y3 _xs _y2`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_53:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _xss _y3 _xs _y2`;
+    asm`draw line _xs _y2 _x2s _y2`;
+    asm`draw line _x2s _y2 _x3 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_54:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line _x3s _y2 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_55:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_56:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_57:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _xss _y3 _xs _y2`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_58:`;
+    asm`draw line _x2ss _y3 _x2 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_59:`;
+    asm`draw line _x2ss _y3 _x2s _y2`;
+    asm`draw line ${cur_x} ${cur_y} _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_60:`;
+    asm`draw line _xs _y2 _x2s _y2`;
+    asm`draw line _x3ss _y3 _x2s _y2`;
+    asm`draw line _x2s _y2 _x3 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_61:`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_62:`;
+    asm`draw line _x2s _y2 _x3s _y2`;
+    asm`draw line _xss _y3 _x2s _y2`;
+    asm`draw line ${cur_x} ${cur_y} _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_63:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line _x3ss _y3 _x3s _y2`;
+    asm`draw line _x2s _y2 _x3s _y2`;
+    asm`draw line _x2 ${cur_y} _x2s _y2`;
+    asm`op add _draw_char_x3 _x3 ${font_skew}`;
+    asm`op sub _draw_char_x4 _draw_char_x3 1`;
+    asm`draw line _draw_char_x3 ${cur_y} _draw_char_x4 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_64:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line _x3ss _y3 _x3s _y2`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`draw line _x2s _y2 _x3s _y2`;
+    asm`draw line _x2ss _y3 _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_65:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_66:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _x2s _y2 _x3s _y2`;
+    asm`draw line _x2ss _y3 _x2 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_67:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_68:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _x2ss _y3 _x2 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_69:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`draw line _xs _y2 _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_70:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`draw line _xs _y2 _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_71:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line _x3s _y2 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`draw line _x2s _y2 _x3s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_72:`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_73:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _x2ss _y3 _x2 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_74:`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _xs _y2 ${cur_x} ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_75:`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`draw line _xs _y2 _x2s _y2`;
+    asm`draw line _x3ss _y3 _x2s _y2`;
+    asm`draw line _x2s _y2 _x3 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_76:`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_77:`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`draw line _xss _y3 _x2s _y2`;
+    asm`draw line _x3ss _y3 _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_78:`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`draw line _xss _y3 _x3 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_79:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_80:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line _x3ss _y3 _x3s _y2`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_81:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`draw line _x2s _y2 _x3 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_82:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line _x3ss _y3 _x3s _y2`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`draw line _x2s _y2 _x3 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_83:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line _x3s _y2 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _xss _y3 _xs _y2`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_84:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line _x2ss _y3 _x2 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_85:`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_86:`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`draw line _x3ss _y3 ${cur_x} ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_87:`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`draw line ${cur_x} ${cur_y} _x2s _y2`;
+    asm`draw line _x2s _y2 _x3 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_88:`;
+    asm`draw line _xss _y3 _x3 ${cur_y}`;
+    asm`draw line _x3ss _y3 ${cur_x} ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_89:`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _xss _y3 _xs _y2`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_90:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _x3ss _y3 ${cur_x} ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_91:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_92:`;
+    asm`draw line _xss _y3 _x3 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_93:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_94:`;
+    asm`draw line ${cur_x} ${cur_y} _x2s _y2`;
+    asm`draw line _x2s _y2 _x3 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_95:`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_96:`;
+    asm`draw line _xss _y3 _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_97:`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _xs _y2 ${cur_x} ${cur_y}`;
+    asm`draw line _xs _y2 _x2s _y2`;
+    asm`draw line _x2 ${cur_y} _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_98:`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`draw line _xs _y2 _x2s _y2`;
+    asm`draw line _x2s _y2 _x3 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_99:`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _xs _y2 ${cur_x} ${cur_y}`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_100:`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _x2s _y2 _x3s _y2`;
+    asm`draw line ${cur_x} ${cur_y} _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_101:`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _xs _y2 ${cur_x} ${cur_y}`;
+    asm`draw line _xs _y2 _x2s _y2`;
+    asm`draw line ${cur_x} ${cur_y} _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_102:`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`draw line _x3ss _y3 _x2s _y2`;
+    asm`draw line _x2 ${cur_y} _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_103:`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _x2s _y2 _x3s _y2`;
+    asm`draw line _x3ss _y3 _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_104:`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`draw line _xs _y2 _x2s _y2`;
+    asm`draw line _x2 ${cur_y} _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_105:`;
+    asm`draw line _x2 ${cur_y} _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_106:`;
+    asm`draw line _xs _y2 ${cur_x} ${cur_y}`;
+    asm`draw line _x2ss _y3 _x2s _y2`;
+    asm`draw line ${cur_x} ${cur_y} _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_107:`;
+    asm`draw line _x2ss _y3 _x2 ${cur_y}`;
+    asm`draw line _x3ss _y3 _x2s _y2`;
+    asm`draw line _x2s _y2 _x3 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_108:`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_109:`;
+    asm`draw line _x3s _y2 _x3 ${cur_y}`;
+    asm`draw line _xs _y2 ${cur_x} ${cur_y}`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`draw line _x2 ${cur_y} _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_110:`;
+    asm`draw line _xs _y2 ${cur_x} ${cur_y}`;
+    asm`draw line _xs _y2 _x2s _y2`;
+    asm`draw line _x2 ${cur_y} _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_111:`;
+    asm`draw line _x3s _y2 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _xs _y2 ${cur_x} ${cur_y}`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_112:`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`draw line _xs _y2 _x2s _y2`;
+    asm`draw line _xss _y3 _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_113:`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line _x2s _y2 _x3s _y2`;
+    asm`draw line _x3ss _y3 _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_114:`;
+    asm`draw line _xs _y2 ${cur_x} ${cur_y}`;
+    asm`draw line _xs _y2 _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_115:`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _x2s _y2 _x3s _y2`;
+    asm`draw line _x2s _y2 _x3 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_116:`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm`draw line _xs _y2 _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_117:`;
+    asm`draw line _x3s _y2 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _xs _y2 ${cur_x} ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_118:`;
+    asm`draw line _xs _y2 ${cur_x} ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_119:`;
+    asm`draw line _x3s _y2 _x3 ${cur_y}`;
+    asm`draw line _xs _y2 ${cur_x} ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x2s _y2`;
+    asm`draw line _x2s _y2 _x3 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_120:`;
+    asm`draw line _xss _y3 _x3 ${cur_y}`;
+    asm`draw line _x3ss _y3 ${cur_x} ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_121:`;
+    asm`draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _x2s _y2 _x3s _y2`;
+    asm`draw line _x2ss _y3 _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_122:`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _xs _y2 _x2s _y2`;
+    asm`draw line ${cur_x} ${cur_y} _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_123:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _xs _y2 _x2s _y2`;
+    asm`draw line _xss _y3 _x2s _y2`;
+    asm`draw line ${cur_x} ${cur_y} _x2s _y2`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_124:`;
+    asm`draw line _x2ss _y3 _x2 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_125:`;
+    asm`draw line _xss _y3 _x3ss _y3`;
+    asm`draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm`draw line _x2s _y2 _x3s _y2`;
+    asm`draw line _x3ss _y3 _x2s _y2`;
+    asm`draw line _x2s _y2 _x3 ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_126:`;
+    asm`draw line _xs _y2 _x3s _y2`;
+    asm`draw line _x3ss _y3 ${cur_x} ${cur_y}`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_127:`;
+    asm`jump draw_char_advance always`;
+    asm`drawChar_128:`;
+    asm`jump draw_char_advance always`;
+    asm`draw_char_advance:`;
+    asm`op add ${cur_x} ${cur_x} ${font_hspace}`;
+    asm`op add ${cur_x} ${cur_x} ${font_width}`;
+    asm`draw_char_end:`;
+}
+
+
