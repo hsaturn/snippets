@@ -1,633 +1,237 @@
-set cur_x 10
-set cur_y 10
-set font_width 8
-set font_height 16
-set font_stroke 1
-set font_vspace 2
-set font_hspace 4
-set font_skew 0
-op add _drawChar @counter 1
-jump draw_char_end always
-op div _sk2 font_skew 2
-jump draw_char_advance lessThan char 32
-jump draw_char_advance greaterThan char 128
-op add _xs cur_x _sk2
-op add _xss cur_x font_skew
-op div _x2 font_width 2
-op add _x2 _x2 cur_x
-op add _x2s _x2 _sk2
-op add _x2ss _x2 font_skew
-op add _x3 cur_x font_width
-op add _x3s _x3 _sk2
-op add _x3ss _x3 font_skew
-op div _y2 font_height 2
-op add _y2 _y2 cur_y
-op add _y3 cur_y font_height
-draw stroke font_stroke
-op sub _char char 31
-op add _char _char @counter
-set @counter _char
-jump drawChar_32 always
-jump drawChar_33 always
-jump drawChar_34 always
-jump drawChar_35 always
-jump drawChar_36 always
-jump drawChar_37 always
-jump drawChar_38 always
-jump drawChar_39 always
-jump drawChar_40 always
-jump drawChar_41 always
-jump drawChar_42 always
-jump drawChar_43 always
-jump drawChar_44 always
-jump drawChar_45 always
-jump drawChar_46 always
-jump drawChar_47 always
-jump drawChar_48 always
-jump drawChar_49 always
-jump drawChar_50 always
-jump drawChar_51 always
-jump drawChar_52 always
-jump drawChar_53 always
-jump drawChar_54 always
-jump drawChar_55 always
-jump drawChar_56 always
-jump drawChar_57 always
-jump drawChar_58 always
-jump drawChar_59 always
-jump drawChar_60 always
-jump drawChar_61 always
-jump drawChar_62 always
-jump drawChar_63 always
-jump drawChar_64 always
-jump drawChar_65 always
-jump drawChar_66 always
-jump drawChar_67 always
-jump drawChar_68 always
-jump drawChar_69 always
-jump drawChar_70 always
-jump drawChar_71 always
-jump drawChar_72 always
-jump drawChar_73 always
-jump drawChar_74 always
-jump drawChar_75 always
-jump drawChar_76 always
-jump drawChar_77 always
-jump drawChar_78 always
-jump drawChar_79 always
-jump drawChar_80 always
-jump drawChar_81 always
-jump drawChar_82 always
-jump drawChar_83 always
-jump drawChar_84 always
-jump drawChar_85 always
-jump drawChar_86 always
-jump drawChar_87 always
-jump drawChar_88 always
-jump drawChar_89 always
-jump drawChar_90 always
-jump drawChar_91 always
-jump drawChar_92 always
-jump drawChar_93 always
-jump drawChar_94 always
-jump drawChar_95 always
-jump drawChar_96 always
-jump drawChar_97 always
-jump drawChar_98 always
-jump drawChar_99 always
-jump drawChar_100 always
-jump drawChar_101 always
-jump drawChar_102 always
-jump drawChar_103 always
-jump drawChar_104 always
-jump drawChar_105 always
-jump drawChar_106 always
-jump drawChar_107 always
-jump drawChar_108 always
-jump drawChar_109 always
-jump drawChar_110 always
-jump drawChar_111 always
-jump drawChar_112 always
-jump drawChar_113 always
-jump drawChar_114 always
-jump drawChar_115 always
-jump drawChar_116 always
-jump drawChar_117 always
-jump drawChar_118 always
-jump drawChar_119 always
-jump drawChar_120 always
-jump drawChar_121 always
-jump drawChar_122 always
-jump drawChar_123 always
-jump drawChar_124 always
-jump drawChar_125 always
-jump drawChar_126 always
-jump drawChar_127 always
-jump drawChar_128 always
-drawChar_32:
-jump draw_char_advance always
-drawChar_33:
-draw line _x3ss _y3 _x3 cur_y
-op add _draw_char_x3 _x3 font_skew
-op sub _draw_char_x4 _draw_char_x3 1
-draw line _draw_char_x3 cur_y _draw_char_x4 cur_y
-jump draw_char_advance always
-drawChar_34:
-draw line _x3ss _y3 _x3s _y2
-draw line _x2ss _y3 _x2s _y2
-jump draw_char_advance always
-drawChar_35:
-draw line _x3ss _y3 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-draw line _xs _y2 _x3s _y2
-draw line _x2ss _y3 _x2 cur_y
-jump draw_char_advance always
-drawChar_36:
-draw line _xss _y3 _x3ss _y3
-draw line _x3s _y2 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-draw line _xss _y3 _xs _y2
-draw line _xs _y2 _x3s _y2
-draw line _x2ss _y3 _x2 cur_y
-jump draw_char_advance always
-drawChar_37:
-draw line _x3s _y2 _x3 cur_y
-draw line _xss _y3 _xs _y2
-draw line _xs _y2 _x3s _y2
-draw line _xss _y3 _x3 cur_y
-draw line _x2ss _y3 _x2 cur_y
-draw line _x3ss _y3 cur_x cur_y
-jump draw_char_advance always
-drawChar_38:
-draw line _xss _y3 _x3ss _y3
-draw line cur_x cur_y _x3 cur_y
-draw line _xs _y2 cur_x cur_y
-draw line _xs _y2 _x2s _y2
-draw line _xss _y3 _x3 cur_y
-draw line _x2ss _y3 _x2s _y2
-jump draw_char_advance always
-drawChar_39:
-draw line _x2ss _y3 _x2s _y2
-jump draw_char_advance always
-drawChar_40:
-draw line _x3ss _y3 _x2s _y2
-draw line _x2s _y2 _x3 cur_y
-jump draw_char_advance always
-drawChar_41:
-draw line _xss _y3 _x2s _y2
-draw line cur_x cur_y _x2s _y2
-jump draw_char_advance always
-drawChar_42:
-draw line _xs _y2 _x3s _y2
-draw line _xss _y3 _x3 cur_y
-draw line _x2ss _y3 _x2 cur_y
-draw line _x3ss _y3 cur_x cur_y
-jump draw_char_advance always
-drawChar_43:
-draw line _xs _y2 _x3s _y2
-draw line _x2ss _y3 _x2 cur_y
-jump draw_char_advance always
-drawChar_44:
-draw line cur_x cur_y _x2s _y2
-jump draw_char_advance always
-drawChar_45:
-draw line _xs _y2 _x3s _y2
-jump draw_char_advance always
-drawChar_46:
-op add _draw_char_x3 _x3 font_skew
-op sub _draw_char_x4 _draw_char_x3 1
-draw line _draw_char_x3 cur_y _draw_char_x4 cur_y
-jump draw_char_advance always
-drawChar_47:
-draw line _x3ss _y3 cur_x cur_y
-jump draw_char_advance always
-drawChar_48:
-draw line _xss _y3 _x3ss _y3
-draw line _x3ss _y3 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-draw line cur_x cur_y _xss _y3
-draw line _x3ss _y3 cur_x cur_y
-jump draw_char_advance always
-drawChar_49:
-draw line _x3ss _y3 _x3 cur_y
-draw line _x3ss _y3 _x2s _y2
-jump draw_char_advance always
-drawChar_50:
-draw line _xss _y3 _x3ss _y3
-draw line _x3ss _y3 _x3s _y2
-draw line cur_x cur_y _x3 cur_y
-draw line _xs _y2 cur_x cur_y
-draw line _xs _y2 _x3s _y2
-jump draw_char_advance always
-drawChar_51:
-draw line _xss _y3 _x3ss _y3
-draw line _x3ss _y3 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-draw line _x2s _y2 _x3s _y2
-jump draw_char_advance always
-drawChar_52:
-draw line _x3ss _y3 _x3 cur_y
-draw line _xss _y3 _xs _y2
-draw line _xs _y2 _x3s _y2
-jump draw_char_advance always
-drawChar_53:
-draw line _xss _y3 _x3ss _y3
-draw line cur_x cur_y _x3 cur_y
-draw line _xss _y3 _xs _y2
-draw line _xs _y2 _x2s _y2
-draw line _x2s _y2 _x3 cur_y
-jump draw_char_advance always
-drawChar_54:
-draw line _xss _y3 _x3ss _y3
-draw line _x3s _y2 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-draw line cur_x cur_y _xss _y3
-draw line _xs _y2 _x3s _y2
-jump draw_char_advance always
-drawChar_55:
-draw line _xss _y3 _x3ss _y3
-draw line _x3ss _y3 _x3 cur_y
-jump draw_char_advance always
-drawChar_56:
-draw line _xss _y3 _x3ss _y3
-draw line _x3ss _y3 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-draw line cur_x cur_y _xss _y3
-draw line _xs _y2 _x3s _y2
-jump draw_char_advance always
-drawChar_57:
-draw line _xss _y3 _x3ss _y3
-draw line _x3ss _y3 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-draw line _xss _y3 _xs _y2
-draw line _xs _y2 _x3s _y2
-jump draw_char_advance always
-drawChar_58:
-draw line _x2ss _y3 _x2 cur_y
-jump draw_char_advance always
-drawChar_59:
-draw line _x2ss _y3 _x2s _y2
-draw line cur_x cur_y _x2s _y2
-jump draw_char_advance always
-drawChar_60:
-draw line _xs _y2 _x2s _y2
-draw line _x3ss _y3 _x2s _y2
-draw line _x2s _y2 _x3 cur_y
-jump draw_char_advance always
-drawChar_61:
-draw line cur_x cur_y _x3 cur_y
-draw line _xs _y2 _x3s _y2
-jump draw_char_advance always
-drawChar_62:
-draw line _x2s _y2 _x3s _y2
-draw line _xss _y3 _x2s _y2
-draw line cur_x cur_y _x2s _y2
-jump draw_char_advance always
-drawChar_63:
-draw line _xss _y3 _x3ss _y3
-draw line _x3ss _y3 _x3s _y2
-draw line _x2s _y2 _x3s _y2
-draw line _x2 cur_y _x2s _y2
-op add _draw_char_x3 _x3 font_skew
-op sub _draw_char_x4 _draw_char_x3 1
-draw line _draw_char_x3 cur_y _draw_char_x4 cur_y
-jump draw_char_advance always
-drawChar_64:
-draw line _xss _y3 _x3ss _y3
-draw line _x3ss _y3 _x3s _y2
-draw line cur_x cur_y _x3 cur_y
-draw line cur_x cur_y _xss _y3
-draw line _x2s _y2 _x3s _y2
-draw line _x2ss _y3 _x2s _y2
-jump draw_char_advance always
-drawChar_65:
-draw line _xss _y3 _x3ss _y3
-draw line _x3ss _y3 _x3 cur_y
-draw line cur_x cur_y _xss _y3
-draw line _xs _y2 _x3s _y2
-jump draw_char_advance always
-drawChar_66:
-draw line _xss _y3 _x3ss _y3
-draw line _x3ss _y3 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-draw line _x2s _y2 _x3s _y2
-draw line _x2ss _y3 _x2 cur_y
-jump draw_char_advance always
-drawChar_67:
-draw line _xss _y3 _x3ss _y3
-draw line cur_x cur_y _x3 cur_y
-draw line cur_x cur_y _xss _y3
-jump draw_char_advance always
-drawChar_68:
-draw line _xss _y3 _x3ss _y3
-draw line _x3ss _y3 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-draw line _x2ss _y3 _x2 cur_y
-jump draw_char_advance always
-drawChar_69:
-draw line _xss _y3 _x3ss _y3
-draw line cur_x cur_y _x3 cur_y
-draw line cur_x cur_y _xss _y3
-draw line _xs _y2 _x2s _y2
-jump draw_char_advance always
-drawChar_70:
-draw line _xss _y3 _x3ss _y3
-draw line cur_x cur_y _xss _y3
-draw line _xs _y2 _x2s _y2
-jump draw_char_advance always
-drawChar_71:
-draw line _xss _y3 _x3ss _y3
-draw line _x3s _y2 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-draw line cur_x cur_y _xss _y3
-draw line _x2s _y2 _x3s _y2
-jump draw_char_advance always
-drawChar_72:
-draw line _x3ss _y3 _x3 cur_y
-draw line cur_x cur_y _xss _y3
-draw line _xs _y2 _x3s _y2
-jump draw_char_advance always
-drawChar_73:
-draw line _xss _y3 _x3ss _y3
-draw line cur_x cur_y _x3 cur_y
-draw line _x2ss _y3 _x2 cur_y
-jump draw_char_advance always
-drawChar_74:
-draw line _x3ss _y3 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-draw line _xs _y2 cur_x cur_y
-jump draw_char_advance always
-drawChar_75:
-draw line cur_x cur_y _xss _y3
-draw line _xs _y2 _x2s _y2
-draw line _x3ss _y3 _x2s _y2
-draw line _x2s _y2 _x3 cur_y
-jump draw_char_advance always
-drawChar_76:
-draw line cur_x cur_y _x3 cur_y
-draw line cur_x cur_y _xss _y3
-jump draw_char_advance always
-drawChar_77:
-draw line _x3ss _y3 _x3 cur_y
-draw line cur_x cur_y _xss _y3
-draw line _xss _y3 _x2s _y2
-draw line _x3ss _y3 _x2s _y2
-jump draw_char_advance always
-drawChar_78:
-draw line _x3ss _y3 _x3 cur_y
-draw line cur_x cur_y _xss _y3
-draw line _xss _y3 _x3 cur_y
-jump draw_char_advance always
-drawChar_79:
-draw line _xss _y3 _x3ss _y3
-draw line _x3ss _y3 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-draw line cur_x cur_y _xss _y3
-jump draw_char_advance always
-drawChar_80:
-draw line _xss _y3 _x3ss _y3
-draw line _x3ss _y3 _x3s _y2
-draw line cur_x cur_y _xss _y3
-draw line _xs _y2 _x3s _y2
-jump draw_char_advance always
-drawChar_81:
-draw line _xss _y3 _x3ss _y3
-draw line _x3ss _y3 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-draw line cur_x cur_y _xss _y3
-draw line _x2s _y2 _x3 cur_y
-jump draw_char_advance always
-drawChar_82:
-draw line _xss _y3 _x3ss _y3
-draw line _x3ss _y3 _x3s _y2
-draw line cur_x cur_y _xss _y3
-draw line _xs _y2 _x3s _y2
-draw line _x2s _y2 _x3 cur_y
-jump draw_char_advance always
-drawChar_83:
-draw line _xss _y3 _x3ss _y3
-draw line _x3s _y2 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-draw line _xss _y3 _xs _y2
-draw line _xs _y2 _x3s _y2
-jump draw_char_advance always
-drawChar_84:
-draw line _xss _y3 _x3ss _y3
-draw line _x2ss _y3 _x2 cur_y
-jump draw_char_advance always
-drawChar_85:
-draw line _x3ss _y3 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-draw line cur_x cur_y _xss _y3
-jump draw_char_advance always
-drawChar_86:
-draw line cur_x cur_y _xss _y3
-draw line _x3ss _y3 cur_x cur_y
-jump draw_char_advance always
-drawChar_87:
-draw line _x3ss _y3 _x3 cur_y
-draw line cur_x cur_y _xss _y3
-draw line cur_x cur_y _x2s _y2
-draw line _x2s _y2 _x3 cur_y
-jump draw_char_advance always
-drawChar_88:
-draw line _xss _y3 _x3 cur_y
-draw line _x3ss _y3 cur_x cur_y
-jump draw_char_advance always
-drawChar_89:
-draw line _x3ss _y3 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-draw line _xss _y3 _xs _y2
-draw line _xs _y2 _x3s _y2
-jump draw_char_advance always
-drawChar_90:
-draw line _xss _y3 _x3ss _y3
-draw line cur_x cur_y _x3 cur_y
-draw line _x3ss _y3 cur_x cur_y
-jump draw_char_advance always
-drawChar_91:
-draw line _xss _y3 _x3ss _y3
-draw line cur_x cur_y _x3 cur_y
-draw line cur_x cur_y _xss _y3
-jump draw_char_advance always
-drawChar_92:
-draw line _xss _y3 _x3 cur_y
-jump draw_char_advance always
-drawChar_93:
-draw line _xss _y3 _x3ss _y3
-draw line _x3ss _y3 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-jump draw_char_advance always
-drawChar_94:
-draw line cur_x cur_y _x2s _y2
-draw line _x2s _y2 _x3 cur_y
-jump draw_char_advance always
-drawChar_95:
-draw line cur_x cur_y _x3 cur_y
-jump draw_char_advance always
-drawChar_96:
-draw line _xss _y3 _x2s _y2
-jump draw_char_advance always
-drawChar_97:
-draw line cur_x cur_y _x3 cur_y
-draw line _xs _y2 cur_x cur_y
-draw line _xs _y2 _x2s _y2
-draw line _x2 cur_y _x2s _y2
-jump draw_char_advance always
-drawChar_98:
-draw line cur_x cur_y _x3 cur_y
-draw line cur_x cur_y _xss _y3
-draw line _xs _y2 _x2s _y2
-draw line _x2s _y2 _x3 cur_y
-jump draw_char_advance always
-drawChar_99:
-draw line cur_x cur_y _x3 cur_y
-draw line _xs _y2 cur_x cur_y
-draw line _xs _y2 _x3s _y2
-jump draw_char_advance always
-drawChar_100:
-draw line _x3ss _y3 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-draw line _x2s _y2 _x3s _y2
-draw line cur_x cur_y _x2s _y2
-jump draw_char_advance always
-drawChar_101:
-draw line cur_x cur_y _x3 cur_y
-draw line _xs _y2 cur_x cur_y
-draw line _xs _y2 _x2s _y2
-draw line cur_x cur_y _x2s _y2
-jump draw_char_advance always
-drawChar_102:
-draw line _xs _y2 _x3s _y2
-draw line _x3ss _y3 _x2s _y2
-draw line _x2 cur_y _x2s _y2
-jump draw_char_advance always
-drawChar_103:
-draw line _x3ss _y3 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-draw line _x2s _y2 _x3s _y2
-draw line _x3ss _y3 _x2s _y2
-jump draw_char_advance always
-drawChar_104:
-draw line cur_x cur_y _xss _y3
-draw line _xs _y2 _x2s _y2
-draw line _x2 cur_y _x2s _y2
-jump draw_char_advance always
-drawChar_105:
-draw line _x2 cur_y _x2s _y2
-jump draw_char_advance always
-drawChar_106:
-draw line _xs _y2 cur_x cur_y
-draw line _x2ss _y3 _x2s _y2
-draw line cur_x cur_y _x2s _y2
-jump draw_char_advance always
-drawChar_107:
-draw line _x2ss _y3 _x2 cur_y
-draw line _x3ss _y3 _x2s _y2
-draw line _x2s _y2 _x3 cur_y
-jump draw_char_advance always
-drawChar_108:
-draw line cur_x cur_y _xss _y3
-jump draw_char_advance always
-drawChar_109:
-draw line _x3s _y2 _x3 cur_y
-draw line _xs _y2 cur_x cur_y
-draw line _xs _y2 _x3s _y2
-draw line _x2 cur_y _x2s _y2
-jump draw_char_advance always
-drawChar_110:
-draw line _xs _y2 cur_x cur_y
-draw line _xs _y2 _x2s _y2
-draw line _x2 cur_y _x2s _y2
-jump draw_char_advance always
-drawChar_111:
-draw line _x3s _y2 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-draw line _xs _y2 cur_x cur_y
-draw line _xs _y2 _x3s _y2
-jump draw_char_advance always
-drawChar_112:
-draw line cur_x cur_y _xss _y3
-draw line _xs _y2 _x2s _y2
-draw line _xss _y3 _x2s _y2
-jump draw_char_advance always
-drawChar_113:
-draw line _x3ss _y3 _x3 cur_y
-draw line _x2s _y2 _x3s _y2
-draw line _x3ss _y3 _x2s _y2
-jump draw_char_advance always
-drawChar_114:
-draw line _xs _y2 cur_x cur_y
-draw line _xs _y2 _x2s _y2
-jump draw_char_advance always
-drawChar_115:
-draw line cur_x cur_y _x3 cur_y
-draw line _x2s _y2 _x3s _y2
-draw line _x2s _y2 _x3 cur_y
-jump draw_char_advance always
-drawChar_116:
-draw line cur_x cur_y _x3 cur_y
-draw line cur_x cur_y _xss _y3
-draw line _xs _y2 _x2s _y2
-jump draw_char_advance always
-drawChar_117:
-draw line _x3s _y2 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-draw line _xs _y2 cur_x cur_y
-jump draw_char_advance always
-drawChar_118:
-draw line _xs _y2 cur_x cur_y
-draw line cur_x cur_y _x2s _y2
-jump draw_char_advance always
-drawChar_119:
-draw line _x3s _y2 _x3 cur_y
-draw line _xs _y2 cur_x cur_y
-draw line cur_x cur_y _x2s _y2
-draw line _x2s _y2 _x3 cur_y
-jump draw_char_advance always
-drawChar_120:
-draw line _xss _y3 _x3 cur_y
-draw line _x3ss _y3 cur_x cur_y
-jump draw_char_advance always
-drawChar_121:
-draw line _x3ss _y3 _x3 cur_y
-draw line cur_x cur_y _x3 cur_y
-draw line _x2s _y2 _x3s _y2
-draw line _x2ss _y3 _x2s _y2
-jump draw_char_advance always
-drawChar_122:
-draw line cur_x cur_y _x3 cur_y
-draw line _xs _y2 _x2s _y2
-draw line cur_x cur_y _x2s _y2
-jump draw_char_advance always
-drawChar_123:
-draw line _xss _y3 _x3ss _y3
-draw line cur_x cur_y _x3 cur_y
-draw line _xs _y2 _x2s _y2
-draw line _xss _y3 _x2s _y2
-draw line cur_x cur_y _x2s _y2
-jump draw_char_advance always
-drawChar_124:
-draw line _x2ss _y3 _x2 cur_y
-jump draw_char_advance always
-drawChar_125:
-draw line _xss _y3 _x3ss _y3
-draw line cur_x cur_y _x3 cur_y
-draw line _x2s _y2 _x3s _y2
-draw line _x3ss _y3 _x2s _y2
-draw line _x2s _y2 _x3 cur_y
-jump draw_char_advance always
-drawChar_126:
-draw line _xs _y2 _x3s _y2
-draw line _x3ss _y3 cur_x cur_y
-jump draw_char_advance always
-drawChar_127:
-jump draw_char_advance always
-drawChar_128:
-jump draw_char_advance always
-draw_char_advance:
-op add cur_x cur_x font_hspace
-op add cur_x cur_x font_width
-set @counter _draw_char_return
-draw_char_end:
+    asm `op div _sk2 ${font_skew} 2`;
+    asm `jump draw_char_advance lessThan ${char} 46`;
+    asm `jump draw_char_advance greaterThan ${char} 77`;
+    asm `draw stroke ${font_stroke}`;
+    asm `op sub _char ${char} 45`;
+    asm `op add _char _char @counter`;
+    asm `set @counter _char`;
+    asm `jump drawChar_46 always`;
+    asm `jump drawChar_47 always`;
+    asm `jump drawChar_48 always`;
+    asm `jump drawChar_49 always`;
+    asm `jump drawChar_50 always`;
+    asm `jump drawChar_51 always`;
+    asm `jump drawChar_52 always`;
+    asm `jump drawChar_53 always`;
+    asm `jump drawChar_54 always`;
+    asm `jump drawChar_55 always`;
+    asm `jump drawChar_56 always`;
+    asm `jump drawChar_57 always`;
+    asm `jump drawChar_58 always`;
+    asm `jump drawChar_59 always`;
+    asm `jump drawChar_60 always`;
+    asm `jump drawChar_61 always`;
+    asm `jump drawChar_62 always`;
+    asm `jump drawChar_63 always`;
+    asm `jump drawChar_64 always`;
+    asm `jump drawChar_65 always`;
+    asm `jump drawChar_66 always`;
+    asm `jump drawChar_67 always`;
+    asm `jump drawChar_68 always`;
+    asm `jump drawChar_69 always`;
+    asm `jump drawChar_70 always`;
+    asm `jump drawChar_71 always`;
+    asm `jump drawChar_72 always`;
+    asm `jump drawChar_73 always`;
+    asm `jump drawChar_74 always`;
+    asm `jump drawChar_75 always`;
+    asm `jump drawChar_76 always`;
+    asm `jump drawChar_77 always`;
+    asm `drawChar_46:`;
+    asm `op add _x3 ${cur_x} ${font_width}`;
+    asm `op add _draw_char_x3 _x3 ${font_skew}`;
+    asm `op sub _draw_char_x4 _draw_char_x3 1`;
+    asm `draw line _draw_char_x3 ${cur_y} _draw_char_x4 ${cur_y}`;
+    asm `jump draw_char_advance always`;
+    asm `drawChar_47:`;
+    asm `drawChar_48:`;
+    asm `op add _xss ${cur_x} ${font_skew}`;
+    asm `op add _x3 ${cur_x} ${font_width}`;
+    asm `op add _x3ss _x3 ${font_skew}`;
+    asm `op add _y3 ${cur_y} ${font_height}`;
+    asm `draw line _xss _y3 _x3ss _y3`;
+    asm `draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm `draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm `draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm `draw line _x3ss _y3 ${cur_x} ${cur_y}`;
+    asm `jump draw_char_advance always`;
+    asm `drawChar_49:`;
+    asm `op div _x2 ${font_width} 2`;
+    asm `op add _x2 _x2 ${cur_x}`;
+    asm `op add _x2s _x2 _sk2`;
+    asm `op add _x3 ${cur_x} ${font_width}`;
+    asm `op add _x3ss _x3 ${font_skew}`;
+    asm `op div _y2 ${font_height} 2`;
+    asm `op add _y2 _y2 ${cur_y}`;
+    asm `op add _y3 ${cur_y} ${font_height}`;
+    asm `draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm `draw line _x3ss _y3 _x2s _y2`;
+    asm `jump draw_char_advance always`;
+    asm `drawChar_50:`;
+    asm `op add _xs ${cur_x} _sk2`;
+    asm `op add _xss ${cur_x} ${font_skew}`;
+    asm `op add _x3 ${cur_x} ${font_width}`;
+    asm `op add _x3s _x3 _sk2`;
+    asm `op add _x3ss _x3 ${font_skew}`;
+    asm `op div _y2 ${font_height} 2`;
+    asm `op add _y2 _y2 ${cur_y}`;
+    asm `op add _y3 ${cur_y} ${font_height}`;
+    asm `draw line _xss _y3 _x3ss _y3`;
+    asm `draw line _x3ss _y3 _x3s _y2`;
+    asm `draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm `draw line _xs _y2 ${cur_x} ${cur_y}`;
+    asm `draw line _xs _y2 _x3s _y2`;
+    asm `jump draw_char_advance always`;
+    asm `drawChar_51:`;
+    asm `op add _xss ${cur_x} ${font_skew}`;
+    asm `op div _x2 ${font_width} 2`;
+    asm `op add _x2 _x2 ${cur_x}`;
+    asm `op add _x2s _x2 _sk2`;
+    asm `op add _x3 ${cur_x} ${font_width}`;
+    asm `op add _x3s _x3 _sk2`;
+    asm `op add _x3ss _x3 ${font_skew}`;
+    asm `op div _y2 ${font_height} 2`;
+    asm `op add _y2 _y2 ${cur_y}`;
+    asm `op add _y3 ${cur_y} ${font_height}`;
+    asm `draw line _xss _y3 _x3ss _y3`;
+    asm `draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm `draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm `draw line _x2s _y2 _x3s _y2`;
+    asm `jump draw_char_advance always`;
+    asm `drawChar_52:`;
+    asm `op add _xs ${cur_x} _sk2`;
+    asm `op add _xss ${cur_x} ${font_skew}`;
+    asm `op add _x3 ${cur_x} ${font_width}`;
+    asm `op add _x3s _x3 _sk2`;
+    asm `op add _x3ss _x3 ${font_skew}`;
+    asm `op div _y2 ${font_height} 2`;
+    asm `op add _y2 _y2 ${cur_y}`;
+    asm `op add _y3 ${cur_y} ${font_height}`;
+    asm `draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm `draw line _xss _y3 _xs _y2`;
+    asm `draw line _xs _y2 _x3s _y2`;
+    asm `jump draw_char_advance always`;
+    asm `drawChar_53:`;
+    asm `op add _xs ${cur_x} _sk2`;
+    asm `op add _xss ${cur_x} ${font_skew}`;
+    asm `op div _x2 ${font_width} 2`;
+    asm `op add _x2 _x2 ${cur_x}`;
+    asm `op add _x2s _x2 _sk2`;
+    asm `op add _x3 ${cur_x} ${font_width}`;
+    asm `op add _x3ss _x3 ${font_skew}`;
+    asm `op div _y2 ${font_height} 2`;
+    asm `op add _y2 _y2 ${cur_y}`;
+    asm `op add _y3 ${cur_y} ${font_height}`;
+    asm `draw line _xss _y3 _x3ss _y3`;
+    asm `draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm `draw line _xss _y3 _xs _y2`;
+    asm `draw line _xs _y2 _x2s _y2`;
+    asm `draw line _x2s _y2 _x3 ${cur_y}`;
+    asm `jump draw_char_advance always`;
+    asm `drawChar_54:`;
+    asm `op add _xs ${cur_x} _sk2`;
+    asm `op add _xss ${cur_x} ${font_skew}`;
+    asm `op add _x3 ${cur_x} ${font_width}`;
+    asm `op add _x3s _x3 _sk2`;
+    asm `op add _x3ss _x3 ${font_skew}`;
+    asm `op div _y2 ${font_height} 2`;
+    asm `op add _y2 _y2 ${cur_y}`;
+    asm `op add _y3 ${cur_y} ${font_height}`;
+    asm `draw line _xss _y3 _x3ss _y3`;
+    asm `draw line _x3s _y2 _x3 ${cur_y}`;
+    asm `draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm `draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm `draw line _xs _y2 _x3s _y2`;
+    asm `jump draw_char_advance always`;
+    asm `drawChar_55:`;
+    asm `op add _xss ${cur_x} ${font_skew}`;
+    asm `op add _x3 ${cur_x} ${font_width}`;
+    asm `op add _x3ss _x3 ${font_skew}`;
+    asm `op add _y3 ${cur_y} ${font_height}`;
+    asm `draw line _xss _y3 _x3ss _y3`;
+    asm `draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm `jump draw_char_advance always`;
+    asm `drawChar_56:`;
+    asm `op add _xs ${cur_x} _sk2`;
+    asm `op add _xss ${cur_x} ${font_skew}`;
+    asm `op add _x3 ${cur_x} ${font_width}`;
+    asm `op add _x3s _x3 _sk2`;
+    asm `op add _x3ss _x3 ${font_skew}`;
+    asm `op div _y2 ${font_height} 2`;
+    asm `op add _y2 _y2 ${cur_y}`;
+    asm `op add _y3 ${cur_y} ${font_height}`;
+    asm `draw line _xss _y3 _x3ss _y3`;
+    asm `draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm `draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm `draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm `draw line _xs _y2 _x3s _y2`;
+    asm `jump draw_char_advance always`;
+    asm `drawChar_57:`;
+    asm `op add _xs ${cur_x} _sk2`;
+    asm `op add _xss ${cur_x} ${font_skew}`;
+    asm `op add _x3 ${cur_x} ${font_width}`;
+    asm `op add _x3s _x3 _sk2`;
+    asm `op add _x3ss _x3 ${font_skew}`;
+    asm `op div _y2 ${font_height} 2`;
+    asm `op add _y2 _y2 ${cur_y}`;
+    asm `op add _y3 ${cur_y} ${font_height}`;
+    asm `draw line _xss _y3 _x3ss _y3`;
+    asm `draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm `draw line ${cur_x} ${cur_y} _x3 ${cur_y}`;
+    asm `draw line _xss _y3 _xs _y2`;
+    asm `draw line _xs _y2 _x3s _y2`;
+    asm `jump draw_char_advance always`;
+    asm `drawChar_58:`;
+    asm `drawChar_59:`;
+    asm `drawChar_60:`;
+    asm `drawChar_61:`;
+    asm `drawChar_62:`;
+    asm `drawChar_63:`;
+    asm `drawChar_64:`;
+    asm `drawChar_65:`;
+    asm `drawChar_66:`;
+    asm `drawChar_67:`;
+    asm `drawChar_68:`;
+    asm `drawChar_69:`;
+    asm `drawChar_70:`;
+    asm `drawChar_71:`;
+    asm `drawChar_72:`;
+    asm `drawChar_73:`;
+    asm `drawChar_74:`;
+    asm `drawChar_75:`;
+    asm `op add _xs ${cur_x} _sk2`;
+    asm `op add _xss ${cur_x} ${font_skew}`;
+    asm `op div _x2 ${font_width} 2`;
+    asm `op add _x2 _x2 ${cur_x}`;
+    asm `op add _x2s _x2 _sk2`;
+    asm `op add _x3 ${cur_x} ${font_width}`;
+    asm `op add _x3ss _x3 ${font_skew}`;
+    asm `op div _y2 ${font_height} 2`;
+    asm `op add _y2 _y2 ${cur_y}`;
+    asm `op add _y3 ${cur_y} ${font_height}`;
+    asm `draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm `draw line _xs _y2 _x2s _y2`;
+    asm `draw line _x3ss _y3 _x2s _y2`;
+    asm `draw line _x2s _y2 _x3 ${cur_y}`;
+    asm `jump draw_char_advance always`;
+    asm `drawChar_76:`;
+    asm `drawChar_77:`;
+    asm `op add _xss ${cur_x} ${font_skew}`;
+    asm `op div _x2 ${font_width} 2`;
+    asm `op add _x2 _x2 ${cur_x}`;
+    asm `op add _x2s _x2 _sk2`;
+    asm `op add _x3 ${cur_x} ${font_width}`;
+    asm `op add _x3ss _x3 ${font_skew}`;
+    asm `op div _y2 ${font_height} 2`;
+    asm `op add _y2 _y2 ${cur_y}`;
+    asm `op add _y3 ${cur_y} ${font_height}`;
+    asm `draw line _x3ss _y3 _x3 ${cur_y}`;
+    asm `draw line ${cur_x} ${cur_y} _xss _y3`;
+    asm `draw line _xss _y3 _x2s _y2`;
+    asm `draw line _x3ss _y3 _x2s _y2`;
+    asm `jump draw_char_advance always`;
+    asm `draw_char_advance:`;
+    asm `op add ${cur_x} ${cur_x} ${font_hspace}`;
+    asm `op add ${cur_x} ${cur_x} ${font_width}`;
+    asm `draw_char_end:`;
 

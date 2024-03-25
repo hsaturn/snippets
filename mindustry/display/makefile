@@ -11,7 +11,7 @@ TARGET=display
 all: build_dir $(TARGET) display.min
 
 display.min: build_dir $(TARGET)
-	./display charset.14 > display.min
+	./display charset.14 -mlogjs -chars "0123456789KM." -join -speed > display.min
 
 test: all
 	./display charset.14 > display.min
