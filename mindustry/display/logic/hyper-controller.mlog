@@ -1,0 +1,651 @@
+set version:1:4 "hyper-controller-20240321-1"
+set min_power:2:4 0
+set keep_coal:5:4 6500
+set keep_copper:6:4 6500
+set keep_graphite:7:4 6500
+set keep_lead:8:4 8000
+set keep_sand:9:4 6500
+set keep_tit:10:4 6500
+set keep_pyr:11:4 4080
+set keep_tho:12:4 6500
+set keep_sil:13:4 6500
+set keep_spore:14:4 6500
+set keep_scrap:15:4 6500
+set keep_phase:16:4 5000
+set keep_surge:17:4 6500
+set keep_blast:18:4 6500
+set keep_glass:19:4 6500
+set keep_plast:20:4 6500
+set min_cryo:21:4 25
+set powSteam:23:4 330
+set powCombustion:24:4 60
+set powDifferential:25:4 1080
+set n:27:4 "message"
+set loop:29:4 0
+set max_rsrc:30:4 4000
+set min_rsrc:31:4 3990
+set core:32:4 0
+set node:33:4 0
+set mass_enabled:38:4 0
+set pow_node:40:4 0
+set pow_stored:41:4 0
+set pow_capacity:41:20 0
+set next_change:42:4 @second
+set item:45:4 @copper
+jump 37 equal enough_copper:36:59 0
+set count:46:4 copper:35:4
+jump 38 always
+set count:46:4 0
+set power:50:4 -999
+set power_max:51:4 0
+set id:54:4 null
+set time:55:4 null
+op add loop:29:4 loop:29:4 1
+print version:1:4
+print " Loop "
+print loop:29:4
+print "\n"
+set sender:3:4 0
+jump 82 strictEqual core:32:4 0
+sensor copper:35:4 core:32:4 @copper
+sensor coal:35:12 core:32:4 @coal
+sensor lead:35:32 core:32:4 @lead
+sensor sand:35:38 core:32:4 @sand
+sensor glass:35:18 core:32:4 @metaglass
+sensor pyr:35:44 core:32:4 @pyratite
+sensor tit:35:49 core:32:4 @titanium
+sensor tho:35:54 core:32:4 @thorium
+sensor sil:35:59 core:32:4 @silicon
+sensor scrap:35:25 core:32:4 @scrap
+sensor graphite:35:64 core:32:4 @graphite
+sensor plast:35:74 core:32:4 @plastanium
+sensor phase:35:81 core:32:4 @phase-fabric
+sensor surge:35:88 core:32:4 @surge-alloy
+sensor blast:35:95 core:32:4 @blast-compound
+sensor spore:35:102 core:32:4 @spore-pod
+op greaterThan enough_copper:36:59 copper:35:4 keep_copper:6:4
+op greaterThan enough_lead:36:4 lead:35:32 keep_lead:8:4
+op greaterThan enough_coal:36:133 coal:35:12 keep_coal:5:4
+op greaterThan enough_sand:36:146 sand:35:38 keep_sand:9:4
+op greaterThan enough_tit:36:159 tit:35:49 keep_tit:10:4
+op greaterThan enough_pyr:36:171 pyr:35:44 keep_pyr:11:4
+op greaterThan enough_tho:36:183 tho:35:54 keep_tho:12:4
+op greaterThan enough_sil:36:195 sil:35:59 keep_sil:13:4
+op greaterThan enough_spore:36:207 spore:35:102 keep_spore:14:4
+op greaterThan enough_scrap:36:119 scrap:35:25 keep_scrap:15:4
+op greaterThan enough_graphite:36:102 graphite:35:64 keep_graphite:7:4
+op greaterThan enough_phase:36:88 phase:35:81 keep_phase:16:4
+op greaterThan enough_surge:36:74 surge:35:88 keep_surge:17:4
+op greaterThan enough_blast:36:17 blast:35:95 keep_blast:18:4
+op greaterThan enough_glass:36:45 glass:35:18 keep_glass:19:4
+op greaterThan enough_plast:36:31 plast:35:74 keep_plast:20:4
+jump 98 always
+set enough_copper:36:59 1
+set enough_lead:36:4 1
+set enough_coal:36:133 1
+set enough_sand:36:146 1
+set enough_tit:36:159 1
+set enough_pyr:36:171 1
+set enough_tho:36:183 1
+set enough_sil:36:195 1
+set enough_spore:36:207 1
+set enough_scrap:36:119 1
+set enough_graphite:36:102 1
+set enough_phase:36:88 1
+set enough_surge:36:74 1
+set enough_blast:36:17 1
+set enough_glass:36:45 1
+set enough_plast:36:31 1
+set old_std_disass:115:8 standalone_diass_tho_cryo:48:4
+set standalone_diass_tho_cryo:48:4 0
+set power_left:117:8 power:50:4
+op sub i:118:13 @links 1
+jump 456 lessThan i:118:13 0
+getlink link:119:12 i:118:13
+sensor ltype:120:12 link:119:12 @type
+jump 132 notEqual ltype:120:12 @thorium-reactor
+sensor &t0 link:119:12 @cryofluid
+op greaterThanEq enough_cryo:122:16 &t0 min_cryo:21:4
+op lessThan &t1 power_left:117:8 -15
+op and enabled:37:4 &t1 enough_cryo:122:16
+print "Tho enabled "
+print enabled:37:4
+print ", pleft "
+print power_left:117:8
+print ", enough_cryo "
+print enough_cryo:122:16
+print "\n"
+jump 130 notEqual core:32:4 0
+sensor t:126:20 link:119:12 @thorium
+sensor m:127:20 link:119:12 @itemCapacity
+op sub &t2 m:127:20 t:126:20
+op add standalone_diass_tho_cryo:48:4 standalone_diass_tho_cryo:48:4 &t2
+jump 124 notEqual enough_cryo:122:16 0
+set standalone_diass_tho_cryo:48:4 1000
+sensor &t3 link:119:12 @enabled
+op equal &t4 &t3 0
+op and &t5 enabled:37:4 &t4
+jump 130 equal &t5 0
+op mul &t6 30 t:126:20
+op add power_left:117:8 power_left:117:8 &t6
+control enabled link:119:12 enabled:37:4 0 0
+jump 454 always
+op equal &t0 ltype:120:12 @power-node
+op equal &t1 ltype:120:12 @power-node-large
+op or &t2 &t0 &t1
+jump 138 equal &t2 0
+set pow_node:40:4 link:119:12
+jump 454 always
+jump 145 notEqual ltype:120:12 @disassembler
+jump 142 equal core:32:4 0
+control enabled link:119:12 need_disass:49:4 0 0
+jump 144 always
+op greaterThan enabled:144:20 old_std_disass:115:8 1
+control enabled link:119:12 enabled:144:20 0 0
+jump 454 always
+jump 177 notEqual ltype:120:12 @impact-reactor
+sensor &t3 link:119:12 @blast-compound
+op greaterThan &t4 &t3 5
+sensor &t5 link:119:12 @cryofluid
+op greaterThan &t6 &t5 10
+op land &t7 &t4 &t6
+op greaterThan &t8 pow_stored:41:4 30000
+op land &t9 &t7 &t8
+op lessThan &t10 power_left:117:8 -200
+op land enabled:37:4 &t9 &t10
+print "enabled "
+print enabled:37:4
+print "\n"
+sensor &t11 link:119:12 @enabled
+op notEqual &t12 enabled:37:4 &t11
+op or &t13 enabled:37:4 &t12
+op greaterThan &t14 @second next_change:42:4
+op land &t15 &t13 &t14
+jump 168 equal &t15 0
+jump 166 equal enabled:37:4 0
+op add next_change:42:4 @second 60
+control enabled link:119:12 enabled:37:4 0 0
+op sub power_left:117:8 power_left:117:8 6300
+op sub &t16 next_change:42:4 @second
+op floor &t17 &t16
+op max &t18 0 &t17
+print "Impact Power_left, "
+print power_left:117:8
+print " next:"
+print &t18
+print "\n"
+jump 454 always
+op equal &t3 ltype:120:12 @steam-generator
+op equal &t4 ltype:120:12 @combustion-generator
+op or &t5 &t3 &t4
+op equal &t6 ltype:120:12 @differential-generator
+op or &t7 &t5 &t6
+jump 205 equal &t7 0
+set plink:167:16 powSteam:23:4
+sensor enabled:168:16 link:119:12 @enabled
+jump 188 equal &t4 0
+set plink:167:16 powCombustion:24:4
+jump 190 always
+jump 190 equal &t6 0
+set plink:167:16 powDifferential:25:4
+jump 196 greaterThanEq power_left:117:8 -50
+set enabled:168:16 1
+sensor &t8 link:119:12 @enabled
+jump 195 notEqual &t8 0
+op add power_left:117:8 power_left:117:8 plink:167:16
+jump 203 always
+op greaterThanEq &t8 power:50:4 plink:167:16
+sensor &t9 link:119:12 @enabled
+op and &t10 &t8 &t9
+jump 203 equal &t10 0
+set enabled:168:16 0
+op sub power_left:117:8 power_left:117:8 plink:167:16
+set enabled:168:16 0
+control enabled link:119:12 enabled:168:16 0 0
+jump 454 always
+jump 214 notEqual ltype:120:12 @coal-centrifuge
+op notEqual enabled:189:16 coal:35:12 max_rsrc:30:4
+control enabled link:119:12 enabled:189:16 0 0
+sensor &t8 link:119:12 @oil
+jump 213 notEqual &t8 0
+print "Need oil in "
+print link:119:12
+print "\n"
+jump 454 always
+jump 219 notEqual ltype:120:12 @launch-pad
+sensor &t8 link:119:12 @totalItems
+op greaterThanEq enabled:195:16 &t8 50
+control enabled link:119:12 enabled:195:16 0 0
+jump 454 always
+jump 222 notEqual ltype:120:12 @message
+set message:4:4 link:119:12
+jump 454 always
+jump 227 notEqual ltype:120:12 @core-shard
+set core:32:4 link:119:12
+set max_rsrc:30:4 4000
+set min_rsrc:31:4 3990
+jump 454 always
+jump 232 notEqual ltype:120:12 @core-foundation
+set core:32:4 link:119:12
+set max_rsrc:30:4 9000
+set min_rsrc:31:4 8900
+jump 454 always
+jump 237 notEqual ltype:120:12 @core-nucleus
+set core:32:4 link:119:12
+set max_rsrc:30:4 13000
+set min_rsrc:31:4 12800
+jump 454 always
+op equal &t8 ltype:120:12 @graphite-press
+op equal &t9 ltype:120:12 @multi-press
+op or &t10 &t8 &t9
+jump 247 equal &t10 0
+jump 244 notEqual graphite:35:64 max_rsrc:30:4
+set enabled:37:4 0
+jump 245 always
+set enabled:37:4 enough_coal:36:133
+control enabled link:119:12 enabled:37:4 0 0
+jump 454 always
+op equal &t11 ltype:120:12 @silicon-smelter
+op equal &t12 ltype:120:12 @silicon-crucible
+op or &t13 &t11 &t12
+jump 259 equal &t13 0
+op land enabled:37:4 enough_coal:36:133 enough_sand:36:146
+jump 255 notEqual sil:35:59 max_rsrc:30:4
+set enabled:37:4 0
+jump 257 always
+jump 257 equal &t12 0
+op and enabled:37:4 enabled:37:4 enough_pyr:36:171
+control enabled link:119:12 enabled:37:4 0 0
+jump 454 always
+jump 268 notEqual ltype:120:12 @mass-driver
+sensor &t14 link:119:12 @totalItems
+op greaterThan &t15 &t14 50
+op land &t16 mass_enabled:38:4 &t15
+sensor &t17 link:119:12 @totalItems
+op equal &t18 &t17 0
+op or enabled:37:4 &t16 &t18
+control enabled link:119:12 enabled:37:4 0 0
+jump 454 always
+jump 378 notEqual ltype:120:12 @memory-cell
+jump 294 equal core:32:4 0
+print "Dumping to memory\n"
+write 65 link:119:12 0
+write 0 link:119:12 1
+write max_rsrc:30:4 link:119:12 2
+write min_rsrc:31:4 link:119:12 3
+op floor &t14 @time
+write &t14 link:119:12 4
+write copper:35:4 link:119:12 10
+write coal:35:12 link:119:12 11
+write lead:35:32 link:119:12 12
+write sand:35:38 link:119:12 13
+write glass:35:18 link:119:12 14
+write pyr:35:44 link:119:12 15
+write tit:35:49 link:119:12 16
+write tho:35:54 link:119:12 17
+write sil:35:59 link:119:12 18
+write scrap:35:25 link:119:12 19
+write graphite:35:64 link:119:12 20
+write plast:35:74 link:119:12 21
+write phase:35:81 link:119:12 22
+write surge:35:88 link:119:12 23
+write blast:35:95 link:119:12 24
+write spore:35:102 link:119:12 25
+jump 377 always
+read &t14 link:119:12 0
+jump 370 notEqual &t14 65
+read cell_id:262:20 link:119:12 1
+op add next_id:263:20 cell_id:262:20 1
+read &t15 link:119:12 4
+op sub &t16 @time &t15
+op floor last_update:264:20 &t16
+op strictEqual &t17 id:54:4 null
+op greaterThan &t18 id:54:4 next_id:263:20
+op or &t19 &t17 &t18
+jump 306 equal &t19 0
+set id:54:4 next_id:263:20
+jump 312 lessThanEq last_update:264:20 10000
+print "Resync, id="
+print id:54:4
+print "\n"
+write 0 link:119:12 0
+set id:54:4 null
+op notEqual &t20 id:54:4 null
+op greaterThan &t21 id:54:4 cell_id:262:20
+op and &t22 &t20 &t21
+jump 340 equal &t22 0
+print "Retrieving data from cell #"
+print cell_id:262:20
+print ", id="
+print id:54:4
+print "\n"
+read max_rsrc:30:4 link:119:12 2
+read min_rsrc:31:4 link:119:12 3
+op floor time:55:4 @time
+read copper:35:4 link:119:12 10
+read coal:35:12 link:119:12 11
+read lead:35:32 link:119:12 12
+read sand:35:38 link:119:12 13
+read glass:35:18 link:119:12 14
+read pyr:35:44 link:119:12 15
+read tit:35:49 link:119:12 16
+read tho:35:54 link:119:12 17
+read sil:35:59 link:119:12 18
+read scrap:35:25 link:119:12 19
+read graphite:35:64 link:119:12 20
+read plast:35:74 link:119:12 21
+read phase:35:81 link:119:12 22
+read surge:35:88 link:119:12 23
+read blast:35:95 link:119:12 24
+read spore:35:102 link:119:12 25
+op lessThanEq &t23 id:54:4 cell_id:262:20
+op and &t24 &t20 &t23
+jump 369 equal &t24 0
+print "Transmitting data to cell #"
+print cell_id:262:20
+print ", id="
+print id:54:4
+print "\n"
+write 65 link:119:12 0
+write id:54:4 link:119:12 1
+write max_rsrc:30:4 link:119:12 2
+write min_rsrc:31:4 link:119:12 3
+write time:55:4 link:119:12 4
+write copper:35:4 link:119:12 10
+write coal:35:12 link:119:12 11
+write lead:35:32 link:119:12 12
+write sand:35:38 link:119:12 13
+write glass:35:18 link:119:12 14
+write pyr:35:44 link:119:12 15
+write tit:35:49 link:119:12 16
+write tho:35:54 link:119:12 17
+write sil:35:59 link:119:12 18
+write scrap:35:25 link:119:12 19
+write graphite:35:64 link:119:12 20
+write plast:35:74 link:119:12 21
+write phase:35:81 link:119:12 22
+write surge:35:88 link:119:12 23
+write blast:35:95 link:119:12 24
+write spore:35:102 link:119:12 25
+jump 377 always
+jump 377 strictEqual id:54:4 null
+print "Allocating memory #"
+print id:54:4
+print "\n"
+write 65 link:119:12 0
+write id:54:4 link:119:12 1
+write time:55:4 link:119:12 4
+jump 454 always
+jump 385 notEqual ltype:120:12 @kiln
+jump 382 notEqual glass:35:18 max_rsrc:30:4
+set enabled:37:4 0
+jump 383 always
+op and enabled:37:4 enough_lead:36:4 enough_sand:36:146
+control enabled link:119:12 enabled:37:4 0 0
+jump 454 always
+jump 396 notEqual ltype:120:12 @spore-press
+jump 389 notEqual spore:35:102 max_rsrc:30:4
+set enabled:37:4 0
+jump 395 always
+set enabled:37:4 1
+sensor &t14 link:119:12 @oil
+jump 395 notEqual &t14 0
+print "Need oil in "
+print link:119:12
+print "\n"
+jump 454 always
+jump 408 notEqual ltype:120:12 @plastanium-compressor
+jump 400 notEqual plast:35:74 max_rsrc:30:4
+set enabled:37:4 0
+jump 406 always
+set enabled:37:4 enough_tit:36:159
+sensor &t14 link:119:12 @oil
+jump 406 notEqual &t14 0
+print "Need oil in "
+print link:119:12
+print "\n"
+control enabled link:119:12 enabled:37:4 0 0
+jump 454 always
+jump 415 notEqual ltype:120:12 @phase-weaver
+jump 412 notEqual phase:35:81 max_rsrc:30:4
+set enabled:37:4 0
+jump 413 always
+op and enabled:37:4 enough_sand:36:146 enough_tho:36:183
+control enabled link:119:12 enabled:37:4 0 0
+jump 454 always
+jump 424 notEqual ltype:120:12 @surge-smelter
+jump 419 notEqual surge:35:88 max_rsrc:30:4
+set enabled:37:4 0
+jump 422 always
+op and &t14 enough_copper:36:59 enough_lead:36:4
+op and &t15 &t14 enough_tit:36:159
+op and enabled:37:4 &t15 enough_sil:36:195
+control enabled link:119:12 enabled:37:4 0 0
+jump 454 always
+jump 432 notEqual ltype:120:12 @pyratite-mixer
+jump 428 notEqual pyr:35:44 max_rsrc:30:4
+set enabled:37:4 0
+jump 430 always
+op and &t14 enough_coal:36:133 enough_lead:36:4
+op and enabled:37:4 &t14 enough_sand:36:146
+control enabled link:119:12 enabled:37:4 0 0
+jump 454 always
+jump 439 notEqual ltype:120:12 @blast-mixer
+jump 436 notEqual blast:35:95 max_rsrc:30:4
+set enabled:37:4 0
+jump 437 always
+op and enabled:37:4 enough_pyr:36:171 enough_spore:36:207
+control enabled link:119:12 enabled:37:4 0 0
+jump 454 always
+jump 443 notEqual ltype:120:12 @cultivator
+op lessThan enabled:37:4 spore:35:102 max_rsrc:30:4
+control enabled link:119:12 enabled:37:4 0 0
+jump 454 always
+jump 451 notEqual ltype:120:12 @unloader
+set sender:3:4 1
+jump 449 equal count:46:4 0
+control enabled link:119:12 true 0 0
+control config link:119:12 item:45:4 0 0
+jump 450 always
+control enabled link:119:12 false 0 0
+jump 454 always
+print "Not handled: "
+print link:119:12
+print "\n"
+op sub i:118:13 i:118:13 1
+jump 102 always
+jump 547 equal sender:3:4 0
+set item:45:4 0
+set count:46:4 0
+op lessThan &t0 count:46:4 blast:35:95
+op land &t1 &t0 enough_blast:36:17
+jump 464 equal &t1 0
+set item:45:4 @blast-compound
+set count:46:4 blast:35:95
+op lessThan &t2 count:46:4 phase:35:81
+op land &t3 &t2 enough_phase:36:88
+jump 469 equal &t3 0
+set item:45:4 @phase-fabric
+set count:46:4 phase:35:81
+op lessThan &t4 count:46:4 surge:35:88
+op land &t5 &t4 enough_surge:36:74
+jump 474 equal &t5 0
+set item:45:4 @surge-alloy
+set count:46:4 surge:35:88
+op lessThan &t6 count:46:4 tho:35:54
+op land &t7 &t6 enough_tho:36:183
+jump 479 equal &t7 0
+set item:45:4 @thorium
+set count:46:4 tho:35:54
+op lessThan &t8 count:46:4 tit:35:49
+op land &t9 &t8 enough_tit:36:159
+jump 484 equal &t9 0
+set item:45:4 @titanium
+set count:46:4 tit:35:49
+op lessThan &t10 count:46:4 spore:35:102
+op land &t11 &t10 enough_spore:36:207
+jump 489 equal &t11 0
+set item:45:4 @spore-pod
+set count:46:4 spore:35:102
+op lessThan &t12 count:46:4 plast:35:74
+op land &t13 &t12 enough_plast:36:31
+jump 494 equal &t13 0
+set item:45:4 @plastanium
+set count:46:4 plast:35:74
+op lessThan &t14 count:46:4 pyr:35:44
+op land &t15 &t14 enough_pyr:36:171
+jump 499 equal &t15 0
+set item:45:4 @pyratite
+set count:46:4 pyr:35:44
+op lessThan &t16 count:46:4 sil:35:59
+op land &t17 &t16 enough_sil:36:195
+jump 504 equal &t17 0
+set item:45:4 @silicon
+set count:46:4 sil:35:59
+op lessThan &t18 count:46:4 scrap:35:25
+op land &t19 &t18 enough_scrap:36:119
+jump 509 equal &t19 0
+set item:45:4 @scrap
+set count:46:4 scrap:35:25
+op lessThan &t20 count:46:4 glass:35:18
+op land &t21 &t20 enough_glass:36:45
+jump 514 equal &t21 0
+set item:45:4 @metaglass
+set count:46:4 glass:35:18
+op lessThan &t22 count:46:4 lead:35:32
+op land &t23 &t22 enough_lead:36:4
+jump 519 equal &t23 0
+set item:45:4 @lead
+set count:46:4 lead:35:32
+op lessThan &t24 count:46:4 graphite:35:64
+op land &t25 &t24 enough_graphite:36:102
+jump 524 equal &t25 0
+set item:45:4 @graphite
+set count:46:4 graphite:35:64
+op lessThan &t26 count:46:4 coal:35:12
+op land &t27 &t26 enough_coal:36:133
+jump 529 equal &t27 0
+set item:45:4 @coal
+set count:46:4 coal:35:12
+op lessThan &t28 count:46:4 sand:35:38
+op land &t29 &t28 enough_sand:36:146
+jump 534 equal &t29 0
+set item:45:4 @sand
+set count:46:4 sand:35:38
+op lessThan &t30 count:46:4 copper:35:4
+op land &t31 &t30 enough_copper:36:59
+jump 539 equal &t31 0
+set item:45:4 @copper
+set count:46:4 copper:35:4
+jump 546 equal count:46:4 0
+print "Sending "
+print item:45:4
+print ":"
+print count:46:4
+print "\n"
+jump 547 always
+print "Unloader stopped\n"
+jump 586 equal pow_node:40:4 0
+sensor pow_capacity:41:20 pow_node:40:4 @powerNetCapacity
+sensor pow_stored:41:4 pow_node:40:4 @powerNetStored
+sensor &t0 pow_node:40:4 @powerNetIn
+sensor &t1 pow_node:40:4 @powerNetOut
+op sub &t2 &t0 &t1
+op floor &t3 &t2
+op sub power:50:4 &t3 min_power:2:4
+sensor &t4 pow_node:40:4 @powerNetIn
+jump 559 lessThanEq &t4 power_max:51:4
+sensor &t5 pow_node:40:4 @powerNetIn
+op ceil power_max:51:4 &t5
+jump 561 greaterThanEq power:50:4 0
+print "Need power\n"
+op mul &t6 100 power:50:4
+op div &t7 &t6 power_max:51:4
+op add &t8 &t7 0.5
+op floor percent:437:12 &t8
+op floor &t9 power:50:4
+op div &t10 pow_stored:41:4 1000
+op floor &t11 &t10
+op div &t12 pow_capacity:41:20 1000
+op floor &t13 &t12
+print "Power: "
+print &t9
+print "/"
+print power_max:51:4
+print " ("
+print percent:437:12
+print "%) :"
+print &t11
+print "k/"
+print &t13
+print "k\n"
+jump 585 greaterThanEq pow_stored:41:4 pow_capacity:41:20
+op sub &t14 pow_stored:41:4 pow_capacity:41:20
+op div &t15 &t14 100
+op floor power:50:4 &t15
+jump 587 always
+set power:50:4 0
+jump 636 equal core:32:4 0
+op notEqual &t0 tho:35:54 max_rsrc:30:4
+op notEqual &t1 tit:35:49 max_rsrc:30:4
+op or &t2 &t0 &t1
+op notEqual &t3 graphite:35:64 max_rsrc:30:4
+op or &t4 &t2 &t3
+op notEqual &t5 sand:35:38 max_rsrc:30:4
+op or &t6 &t4 &t5
+op and need_disass:49:4 enough_scrap:36:119 &t6
+set mass_enabled:38:4 1
+jump 600 notEqual enough_coal:36:133 0
+print "Need coal\n"
+set mass_enabled:38:4 0
+jump 603 notEqual enough_lead:36:4 0
+print "Need lead\n"
+set mass_enabled:38:4 0
+jump 606 notEqual enough_copper:36:59 0
+print "Need copper\n"
+set mass_enabled:38:4 0
+jump 609 notEqual enough_sand:36:146 0
+print "Need sand\n"
+set mass_enabled:38:4 0
+jump 612 notEqual enough_pyr:36:171 0
+print "Need pyratite\n"
+set mass_enabled:38:4 0
+jump 615 notEqual enough_tit:36:159 0
+print "Need titanium\n"
+set mass_enabled:38:4 0
+jump 617 notEqual enough_tho:36:183 0
+print "Need thorium\n"
+jump 620 notEqual enough_sil:36:195 0
+print "Need silicium\n"
+set mass_enabled:38:4 0
+jump 623 notEqual enough_spore:36:207 0
+print "Need spore\n"
+set mass_enabled:38:4 0
+jump 626 notEqual enough_scrap:36:119 0
+print "Need scrap\n"
+set mass_enabled:38:4 0
+jump 629 notEqual enough_blast:36:17 0
+print "Need blast compound\n"
+set mass_enabled:38:4 0
+jump 632 notEqual enough_graphite:36:102 0
+print "Need graphite\n"
+set mass_enabled:38:4 0
+jump 635 notEqual enough_surge:36:74 0
+print "Need surge alloy\n"
+set mass_enabled:38:4 0
+jump 647 always
+sensor &t0 pow_node:40:4 @powerNetCapacity
+jump 646 equal &t0 0
+sensor &t1 pow_node:40:4 @powerNetStored
+jump 642 lessThanEq &t1 600
+set mass_enabled:38:4 1
+jump 645 always
+sensor &t2 pow_node:40:4 @powerNetStored
+jump 645 greaterThanEq &t2 10
+set mass_enabled:38:4 0
+jump 647 always
+set mass_enabled:38:4 1
+set pow_node:40:4 0
+printflush message:4:4
+jump 42 always
+
