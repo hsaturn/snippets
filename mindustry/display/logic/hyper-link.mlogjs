@@ -1,0 +1,143 @@
+const version: String = "hyper-link 20240324-3";
+var v = version; // 1st line of asm
+const display_version = "[violet]" + version + "[white]";
+/* - Transmit via memory cells resources contained in the core (from hyper controller).
+   - Enable or disable factories if there is enough
+   */
+var link : AnyBuilding;
+var core_max_rsrc;
+var link_low_rsrc;
+var copper, coal, lead, sand, glass, pyr, tit, tho;
+var sil, scrap, graphite, plast, phase, surge, blast, spore;
+var id : number; // link id
+var message : AnyBuilding;
+var enable_all = false; // NYI
+var min_power;
+var time;
+const copy = new Memory(link, 64);
+var srce_mem: AnyBuilding;
+while (true) {
+    print(display_version, " #", id, "\n");
+    for (let i = Vars.links - 1; i >= 0; i--) {
+        var check = undefined;
+        if (id == undefined)
+            enable_all = true;
+        var link = getLink(i);
+        var ltype = link.type;
+        if (ltype == Blocks.message) {
+            message = link;
+        }
+        else if (ltype == Blocks.memoryCell) {
+            const memory = new Memory(link, 64);
+            if (memory[0] == 65) {
+                var cell_id = memory[1];
+                var next_id = cell_id + 1;
+                if (id === undefined || id > next_id)
+                    id = next_id;
+                if (id > cell_id)
+                {
+                    // Retrieve values
+                    core_max_rsrc = memory[2];
+                    link_low_rsrc = memory[3];
+                    time = memory[4];
+                    min_power = memory[5];
+                    copper = memory[10];
+                    coal = memory[11];
+                    lead = memory[12];
+                    sand = memory[13];
+                    glass = memory[14];
+                    pyr = memory[15];
+                    tit = memory[16];
+                    tho = memory[17];
+                    sil = memory[18];
+                    scrap = memory[19];
+                    graphite = memory[20];
+                    plast = memory[21];
+                    phase = memory[22];
+                    surge = memory[23];
+                    blast = memory[24];
+                    spore = memory[25];
+                    srce_mem = link;
+                }
+                if (id == cell_id) {
+                    print("Transmitting values to ", link, "\n");
+                    memory[2] = core_max_rsrc;
+                    memory[3] = link_low_rsrc;
+                    memory[4] = Vars.time;
+                    memory[5] = min_power;
+                    memory[10] = copper;
+                    memory[11] = coal;
+                    memory[12] = lead;
+                    memory[13] = sand;
+                    memory[14] = glass;
+                    memory[15] = pyr;
+                    memory[16] = tit;
+                    memory[17] = tho;
+                    memory[18] = sil;
+                    memory[19] = scrap;
+                    memory[20] = graphite;
+                    memory[21] = plast;
+                    memory[22] = phase;
+                    memory[23] = surge;
+                    memory[24] = blast;
+                    memory[25] = spore;
+                    // Copying returned values
+                    var idx = 26;
+                    // while(idx < srce_mem.)
+
+                }
+            }
+            else if (id !== undefined) {
+                // Take ownership of the memory
+                memory[0] = 65; // controller
+                memory[1] = id; //
+                memory[4] = Vars.time;
+            }
+        }
+        else if (ltype == Blocks.laserDrill || ltype == Blocks.pneumaticDrill) {
+            if (link.copper) check = copper;
+            else if (link.scrap) check = scrap;
+            else if (link.sand) check = sand;
+            else if (link.lead) check = lead;
+            else if (link.titanium) check = tit;
+            else if (link.coal) check = coal;
+            else if (link.thorium) check = tho;
+            print("Found ? ", check, "\n");
+        }
+        else if (ltype == Blocks.multiPress || ltype == Blocks.graphitePress)
+            check = graphite;
+        else if (ltype == Blocks.massDriver) {
+            var enabled = link.totalItems > 50;
+            asm`control enabled ${link} ${enabled} 0 0`;
+        }
+        else if (ltype == Blocks.pulverizer) {
+            if (sand < scrap)
+                check = sand;
+        }
+        else if (ltype == Blocks.plastaniumCompressor) {
+            check = plast;
+        }
+        else if (ltype == Blocks.disassembler)
+        {
+            check = Math.min(
+                Math.min(sand, tit),
+                Math.min(graphite, tho),
+            );
+        }
+        else if (ltype == Blocks.phaseWeaver) {
+            check = phase;
+        }
+        else if (ltype == Blocks.siliconSmelter || ltype == Blocks.siliconCrucible) {
+            check = sil;
+        }
+        else
+            print("Not handled: ", link, "\n");
+            
+        if ((id != undefined) && (check !== undefined)) {
+            var enabled = check < link_low_rsrc;
+            print(ltype, enabled ? " on ": " off ", check, "/", link_low_rsrc, "\n");
+            asm`control enabled ${link} ${enabled} 0 0`;
+        }
+   }
+    printFlush(message);
+}
