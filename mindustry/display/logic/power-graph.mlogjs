@@ -1,7 +1,4 @@
-// const array = new MutableArray([1, 2, 3, 4, 5]);
-
-// double a random item in the array
-// const index = Math.floor(Math.rand(array.size));
+// vim: syntax=javascript
 const version : String = "Power Graph 20240325-1"
 var display_version = "[violet]" + version + "[white]\n";
 var nbars = 12;
