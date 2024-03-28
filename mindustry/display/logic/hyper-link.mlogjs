@@ -1,9 +1,11 @@
-const version: String = "hyper-link 20240324-3";
-var v = version; // 1st line of asm
-const display_version = "[violet]" + version + "[white]";
-/* - Transmit via memory cells resources contained in the core (from hyper controller).
+/* vim: syntax=javascript
+   - Transmit via memory cells resources contained in the core (from hyper controller).
    - Enable or disable factories if there is enough
    */
+const version: String = "hyper-link 20240328-2";
+var v = version; // 1st line of asm
+
+const display_version = "[violet]" + version + "[white]";
 var link : AnyBuilding;
 var core_max_rsrc;
 var link_low_rsrc;
@@ -14,10 +16,137 @@ var message : AnyBuilding;
 var enable_all = false; // NYI
 var min_power;
 var time;
-const copy = new Memory(link, 64);
-var srce_mem: AnyBuilding;
+var dummy: AnyBuilding;
+const copy = new Memory(dummy, 64);
+var srce_block: AnyBuilding = undefined;
+var srce_size: MemoryCapacity = undefined;
+var core: AnyBuilding = undefined;
+var heap = 0;
+
+const violet = "[violet]";
+const yellow = "[yellow]";
+const cyan = "[cyan]";
+const need_color: String = cyan;
+const color_send: String = "[blue]";
+const error = "[red]";
+const warning = yellow;
+const white: String = "[white]";
+
+// User space zone (from outside to core)
+var user_ptr = 0;   // ptr in cell to user space zone
+var user_size = 5;  // Size of allocated memory
+var cpu_id = Math.floor(Math.rand(100000)) * 100;
+var loop = 0;
+const GarbageCollect: Boolean = true;
+const GarbageTimeout: Number = 10*1000;  // GC after x sec
+var gc = 0; // When != 0, garbage collect gc
+
+// Memory usage:
+// - it is impossible to allocate twice the same size
+// - memory refresh is needed, at very max every GarbageTimeout !
+// - this is write only memory, reading memory is unsafed
+// - The memory pointer returned is valid for 1 second, no more
+//
+// Memory from heap to end of memory contains allocated zones.
+// struct zone
+// {
+//    cpu_id_size = cpu_id + size allocated (with +2 control bytes)
+//    time        = last time zone were used (freed after a while by any cpu)
+//    data[size]  = contains size bytes free to use.
+// }
+// malloc returns
+// -1 : garbage collection in progress
+//  0 : no memory available
+// else index of data in srce_block
+//
+// Garbage collecting
+// 1 - a cpu removes the cpu_id to zone.cpu_id_size
+//     this prevent other cpus to go further in the memory
+// 2 - copies next zones (except 1st byte of all)
+// 3 - refresh the first byte
+function malloc(size: number)
+{
+    if (srce_block === undefined) return 0;
+    if (heap == 0) return 0;
+    if (size == 0) return 0;
+
+    const mem = new Memory(srce_block, srce_size);
+    if (mem[0] == 65 && (id == 0 || mem[1] == id - 1))
+    {
+        print("Malloc ", size, " bytes sz=", srce_size, "\n");
+    }
+    var time = Math.floor(Vars.time);
+    var idx = heap;
+    var cpu_id_size = cpu_id + size + 2;
+    while (idx + size < srce_size)
+    {
+        var byte = mem[idx];
+        if (byte == cpu_id_size)
+        {
+            mem[idx + 1] = time;
+            return idx + 2;
+        }
+        else if (byte == 0)
+        {
+            print("Found area ", idx, "\n");
+            mem[idx] = cpu_id_size;
+            mem[idx + 1] = time;
+            wait(0.2);
+            if (mem[idx] == cpu_id_size)
+                return idx + 2;
+        }
+        else if (byte == 1) // gc in progress
+        {
+            return -1;
+        }
+        else if (GarbageCollect && (time - mem[idx+1]) > GarbageTimeout)
+        {
+            mem[idx] = 1;   // indicate gc
+            wait(1);    // Wait for other processor to finish their operation on their memory
+            // print("[red]Garbage collect at ", idx, "[white]\n");
+            var first = 0;   // Leave the first cpu_id_size unchanged yet
+            var first_idx = idx; // keep to refill 1st cpu_id_size
+            var srce_idx = idx + (byte % 100);
+            byte = mem[srce_idx];
+            while (byte % 100) {
+                var count = byte % 100;
+                while (count--) {
+                    if (first == 0)
+                        first = byte;
+                    else
+                        mem[idx] = mem[srce_idx];
+                    srce_idx++;
+                    idx++;
+                }
+                byte = mem[srce_idx];
+                idx++;
+            }
+            mem[idx-1] = 0;   // Free last area
+            mem[first_idx] = first;
+            // print("End idx gargage ", idx);
+        }
+
+        // print("skipping ", byte % 100," ", mem[idx], " bytes (", idx, ")\n");
+        idx = idx + (byte % 100);
+    }
+    return 0;
+}
+
+var avg_ticks = 37;
+var last_tick = Vars.tick - avg_ticks;
+
+const Filter = 0.9;
+
 while (true) {
+    wait(1);
     print(display_version, " #", id, "\n");
+    var ticks = Vars.tick - last_tick;
+    last_tick = Vars.tick;
+    avg_ticks = Filter * avg_ticks + (1 - Filter) * ticks;
+
+    var latency = avg_ticks / 60;
+    latency = Math.floor(latency * 1000) / 1000;
+    print("cpu #", cpu_id, " loop ", loop, " lat.", latency, "\n");
     for (let i = Vars.links - 1; i >= 0; i--) {
         var check = undefined;
         if (id == undefined)
@@ -27,71 +156,124 @@ while (true) {
         if (ltype == Blocks.message) {
             message = link;
         }
-        else if (ltype == Blocks.memoryCell) {
-            const memory = new Memory(link, 64);
-            if (memory[0] == 65) {
+        else if (ltype == Blocks.coreShard || ltype == Blocks.coreFoundation || ltype == Blocks.coreNucleus) {
+            core = link;
+        }
+        else if (ltype == Blocks.memoryCell || ltype == Blocks.memoryBank) {
+                var dump: Boolean = false;
+                const memory = new Memory(link, 64);
+            if (core) {
+                print("Dumping to memory\n");
+                id = 0;
+                dump = true;
+                memory[4] = Math.floor(Vars.time);
+            }
+            else if (memory[0] == 65) {
                 var cell_id = memory[1];
                 var next_id = cell_id + 1;
+                var last_update = Math.floor(Vars.time - memory[4]);
+                print("Last update: ", last_update, ", id=", id, ", next=", next_id, "\n");
                 if (id === undefined || id > next_id)
                     id = next_id;
-                if (id > cell_id)
-                {
-                    // Retrieve values
-                    core_max_rsrc = memory[2];
-                    link_low_rsrc = memory[3];
-                    time = memory[4];
-                    min_power = memory[5];
-                    copper = memory[10];
-                    coal = memory[11];
-                    lead = memory[12];
-                    sand = memory[13];
-                    glass = memory[14];
-                    pyr = memory[15];
-                    tit = memory[16];
-                    tho = memory[17];
-                    sil = memory[18];
-                    scrap = memory[19];
-                    graphite = memory[20];
-                    plast = memory[21];
-                    phase = memory[22];
-                    surge = memory[23];
-                    blast = memory[24];
-                    spore = memory[25];
-                    srce_mem = link;
+                if (last_update > 10000) {
+                    print(warning + "Resync, id=", id, white + "\n");
+                    memory[0] = 0;  // data too old, trying to reconnect
+                    memory[1] = 0;  // main controller
+                    id = undefined;
                 }
-                if (id == cell_id) {
-                    print("Transmitting values to ", link, "\n");
-                    memory[2] = core_max_rsrc;
-                    memory[3] = link_low_rsrc;
-                    memory[4] = Vars.time;
-                    memory[5] = min_power;
-                    memory[10] = copper;
-                    memory[11] = coal;
-                    memory[12] = lead;
-                    memory[13] = sand;
-                    memory[14] = glass;
-                    memory[15] = pyr;
-                    memory[16] = tit;
-                    memory[17] = tho;
-                    memory[18] = sil;
-                    memory[19] = scrap;
-                    memory[20] = graphite;
-                    memory[21] = plast;
-                    memory[22] = phase;
-                    memory[23] = surge;
-                    memory[24] = blast;
-                    memory[25] = spore;
-                    // Copying returned values
-                    var idx = 26;
-                    // while(idx < srce_mem.)
+                if (id != undefined) {
+                    if (id <= cell_id) {
+                        print(cyan + "Transmitting data to cell #", cell_id, ", id=", id, "\n" + white);
+                        memory[4] = time;
+                        memory[4] = Math.floor(Vars.time);
+                        dump = true;
+                    }
+                    else if (time < memory[4]) {
+                        print("Retrieving data from cell #", cell_id, ", id=", id, "\n");
+                        core_max_rsrc = memory[2];
+                        link_low_rsrc = memory[3];
+                        time = memory[4];
+                        min_power = memory[5];
+                        heap = memory[6];
+                        copper = memory[10];
+                        coal = memory[11];
+                        lead = memory[12];
+                        sand = memory[13];
+                        glass = memory[14];
+                        pyr = memory[15];
+                        tit = memory[16];
+                        tho = memory[17];
+                        sil = memory[18];
+                        scrap = memory[19];
+                        graphite = memory[20];
+                        plast = memory[21];
+                        phase = memory[22];
+                        surge = memory[23];
+                        blast = memory[24];
+                        spore = memory[25];
+                        if (ltype == Blocks.memoryBank)
+                            srce_size = 512;
+                        else
+                            srce_size = 64;
 
+                        srce_block = link;
+                    }
+                    else
+                        print("\n");
                 }
             }
             else if (id !== undefined) {
-                // Take ownership of the memory
+                // Allocate this memory cell to this processor.
+                // print("Allocating memory #", id, "\n");
+                memory[4] = Math.floor(Vars.time);
+                dump = true;
+            }
+            if (dump) {
+                print("Setting id ", id, "\n");
                 memory[0] = 65; // controller
-                memory[1] = id; //
-                memory[4] = Vars.time;
+                memory[1] = id;
+                memory[2] = core_max_rsrc;
+                memory[3] = link_low_rsrc;
+                memory[5] = min_power;
+                memory[6] = heap;
+                memory[10] = copper;
+                memory[11] = coal;
+                memory[12] = lead;
+                memory[13] = sand;
+                memory[14] = glass;
+                memory[15] = pyr;
+                memory[16] = tit;
+                memory[17] = tho;
+                memory[18] = sil;
+                memory[19] = scrap;
+                memory[20] = graphite;
+                memory[21] = plast;
+                memory[22] = phase;
+                memory[23] = surge;
+                memory[24] = blast;
+                memory[25] = spore;
+
+                // Copying from outside (id>) to inside values (<id)
+                if (srce_block != undefined) {
+                    const srce_mem = new Memory(srce_block);
+                    var idx = heap;
+                    var byte = memory[idx];
+                    // byte == 0 is the end of memory allocated.
+                    // byte % 100 == 0 indicates freeing this zone (NYI)
+                    // so, stop to forward from this point
+                    while (byte % 100) {
+                        var count = byte % 100;
+                        if (count == 1) break;
+                        var from = byte - count;
+                        print(yellow + "  Forwarding ", count, " bytes from ", from, " ", idx, "\n");
+                        while (count--) {
+                            srce_mem[idx] = memory[idx];
+                            idx++;
+                        }
+                        byte = memory[idx];
+                        idx++;
+                    }
+                }
             }
         }
         else if (ltype == Blocks.laserDrill || ltype == Blocks.pneumaticDrill) {
@@ -130,6 +312,24 @@ while (true) {
         else if (ltype == Blocks.siliconSmelter || ltype == Blocks.siliconCrucible) {
             check = sil;
         }
+        else if (ltype == Blocks.switch) {
+            var sw = getBuilding("switch1");
+            if (sw.enabled) {
+                var idx = malloc(1);
+                print("malloc=", idx, "\n");
+                const mem: Memory = new Memory(srce_block, srce_size);
+                mem[idx] = loop;
+                if (idx > 0) {
+                    print("mem=", idx, "\n");
+                    const mem: Memory = new Memory(srce_block, srce_size);
+                }
+                else if (idx == -1)
+                    print("[red]Memory not available[white]\n");
+                else if (idx == 0)
+                    print("[red]Out of memory[white]\n");
+            }
+
+        }
         else
             print("Not handled: ", link, "\n");
             
@@ -138,6 +338,7 @@ while (true) {
             print(ltype, enabled ? " on ": " off ", check, "/", link_low_rsrc, "\n");
             asm`control enabled ${link} ${enabled} 0 0`;
         }
-   }
+    }
+   loop++;
     printFlush(message);
 }
