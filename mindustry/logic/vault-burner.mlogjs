@@ -1,0 +1,70 @@
+var version = "vault burner 20240326";
+var vault: AnyBuilding;
+var unloader: AnyBuilding;
+var message = getBuilding("message1");
+
+function check(vault : AnyBuilding, unloader: AnyBuilding, incinerator: AnyBuilding)
+{
+    var max = vault.itemCapacity - 3;
+    var enabled = true;
+    var copper = vault.copper;
+    var lead = vault.lead;
+    var glass = vault.metaglass;
+    var graphite = vault.graphite;
+
+    var sand = vault.sand;
+    var coal = vault.coal;
+    var titanium = vault.titanium;
+    var thorium = vault.thorium;
+
+    var scrap = vault.scrap;
+    var silicium = vault.silicon;
+    var plastanium = vault.plastanium;
+    var phase = vault.phaseFabric;
+    
+    var surge = vault.surgeAlloy;
+    var spore = vault.sporePod;
+    var blast = vault.blastCompound
+    var pyratite = vault.pyratite;
+
+    var m = max - 30;
+
+    if ((copper >= m) && (lead >= m) && (glass >= m) && (graphite >= m)
+        && (sand >= m) && (coal >= m) && (titanium >= m) && (thorium >= m)
+        && (silicium >= m) && (plastanium >= m) && (phase >= m)
+        && (surge >= m) && (spore >= m) && (blast >= m) && (pyratite >= m)) enabled = false;
+
+    else if (copper > max) asm`control config ${unloader} @copper 0 0 0`;
+    else if (lead > max) asm`control config ${unloader} @lead 0 0 0`;
+    else if (glass > max) asm`control config ${unloader} @metaglass 0 0 0`;
+    else if (graphite > max) asm`control config ${unloader} @graphite 0 0 0`;
+
+    else if (sand > max) asm`control config ${unloader} @sand 0 0 0`;
+    else if (coal > max) asm`control config ${unloader} @coal 0 0 0`;
+    else if (titanium > max) asm`control config ${unloader} @titanium 0 0 0`;
+    else if (thorium > max) asm`control config ${unloader} @thorium 0 0 0`;
+
+    else if (scrap > max) asm`control config ${unloader} @scrap 0 0 0`;
+    else if (silicium > max) asm`control config ${unloader} @silicon 0 0 0`;
+    else if (plastanium > max) asm`control config ${unloader} @plastanium 0 0 0`;
+    else if (phase > max) asm`control config ${unloader} @phase-fabric 0 0 0`;
+
+    else if (surge > max) asm`control config ${unloader} @surge-alloy 0 0 0`;
+    else if (spore > max) asm`control config ${unloader} @spore-pod 0 0 0`;
+    else if (blast > max) asm`control config ${unloader} @blast-compound 0 0 0`;
+    else if (pyratite > max) asm`control config ${unloader} @pyratite 0 0 0`;
+
+    else
+        enabled = false;
+    asm`control enabled ${unloader} ${enabled} 0 0 0`;
+    asm`control enabled ${incinerator} ${enabled} 0 0 0`;
+    if (enabled)
+        wait(0.5);
+    asm`control enabled ${unloader} ${false} 0 0 0`;
+    asm`control enabled ${incinerator} ${false} 0 0 0`;
+}
+
+while (true) {
+    check(getBuilding("container1"), getBuilding("unloader2"), getBuilding("incinerator1"));
+}
+printFlush(message);

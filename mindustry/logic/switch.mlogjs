@@ -1,0 +1,83 @@
+var version = "Switch 20240329-3";
+/*
+  Copies the state of the switch to all connected devices
+  - If a power node is linked, don't switch on if low power
+  - If a vault and an unloaders or a sorter are linked, wait till amount
+    container is in the container (see factor for this) is enough
+*/
+var sw: AnyBuilding;
+var enabled = true;
+var message: AnyBuilding;
+var links;
+var node: AnyBuilding;
+var power = undefined;
+var factor = 0.5;   // Amount of vault capacity to allow on
+var container: AnyBuilding = undefined;
+var main_enabled = true;
+
+const violet = "[violet]";
+const yellow = "[yellow]";
+const cyan = "[cyan]";
+const green = "[green]";
+const need_color: String = cyan;
+const color_send: String = "[blue]";
+const error = "[red]";
+const warning = yellow;
+const white: String = "[white]";
+
+while (Vars.links != links) {
+    Vars.links;
+    print(version, "\n");
+    var unloader_enable = undefined;
+    for (let i = Vars.links - 1; i >= 0; i--) {
+        let link = getLink(i);
+        let ltype = link.type;
+        if (ltype == Blocks.switch) {
+            sw = link;
+            enabled = main_enabled && link.enabled && ((power === undefined) || (power > 0));
+        }
+        else if (ltype == Blocks.container || ltype == Blocks.vault) {
+            container = link;
+        }
+        else if (ltype == Blocks.unloader || ltype == Blocks.sorter || ltype == Blocks.invertedSorter)
+        {
+            if (container) {
+                if (unloader_enable == undefined) unloader_enable = true;
+                var item = link.config;
+                var item_count;
+                asm`sensor ${item_count} ${container} ${item}`;
+                var min = factor * container.itemCapacity;
+                var enabled = item_count >= min;
+                if (!enabled)
+                    print(need_color + "Need ", item, white + "\n");
+                else
+                    print("Enough ", item, "(", item_count, "/", min, ")\n");
+                unloader_enable = unloader_enable && enabled;
+            }
+            else
+                print(warning + "Please connect a vault or a container\n"+white);
+        }
+        else if (ltype == Blocks.powerNode || ltype == Blocks.powerNodeLarge)
+        {
+            power = link.powerNetIn - link.powerNetOut + link.powerNetStored / 2;
+            print("Power + capa = ", Math.floor(power), "\n");
+        }
+        else if (ltype == Blocks.message)
+            message = link;
+        else {
+            if (enabled !== undefined) {
+                print(ltype, ": ", enabled ? "on\n" : "off\n");
+                asm`control enabled ${link} ${main_enabled} 0 0`;
+            }
+        }
+    }
+    if (unloader_enable === undefined)
+        main_enabled = true;
+    else {
+        main_enabled = unloader_enable;
+        print("Enough rsrc: ", main_enabled, "\n");
+    }
+    if (sw === undefined)
+        print("Connect a switch please");
+    printFlush(message);
+}

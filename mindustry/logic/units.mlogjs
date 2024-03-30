@@ -1,0 +1,68 @@
+unitBind(Units.poly);
+var turret : AnyBuilding = getBuilding("foreshadow1");
+var repair;
+var message: AnyBuilding = getBuilding("message2");
+
+function unitGoto(x, y, r = 10)
+{
+    var d;
+    var oldd = 0;
+    var count = 10;
+    print("Going ", Math.floor(x), " x ", Math.floor(y), " ", "\n");
+    printFlush(message);
+    do {
+        unitControl.approach({
+            x: x,
+            y: y,
+            radius: r,
+        });
+
+        var dx = Math.abs(x - Vars.unit.x);
+        var dy = Math.abs(y - Vars.unit.y);
+        d = dx + dy;
+        var delta = oldd - d;
+        print("delta = ", Math.floor(delta*100)/100, "\nd = ", Math.floor(d*10)/10);
+        printFlush();
+        if (Math.abs(delta)>6)
+            count = 5;
+        else if (count-- < 0) break;f
+        oldd = d;
+    } while (d > r);
+}
+
+while (true) {
+
+
+    const { x, y } = Vars.unit;
+
+    var message = getBuilding("message1");
+    print("x: ", Math.floor(x), " y: ", Math.floor(y), "\n");
+
+    printFlush(message);
+    unitGoto(Vars.thisx, Vars.thisy);
+
+    var found;
+    var repair;
+    var bx, by;
+
+    asm`ulocate building core false @copper ${bx} ${by} __tmp75 oFoundCore`;
+
+/*    const [bx, by, zz] = unitLocate.building({
+        group: "core",
+        enemy: 0,
+        found: found,
+        building: repair
+    });
+    */
+
+    print(found, "\n", repair);
+    unitGoto(bx, by);
+
+    control.shootp({
+        building: turret,
+        unit: repair,
+        shoot: true,
+    });
+
+}
+

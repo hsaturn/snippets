@@ -1,0 +1,285 @@
+set alert:4:4 0.3
+set split_mode:5:4 -1
+set alert_sw:7:4 null
+print "[violet]Rsrc-20240325-5[white]\n"
+op sub i:15:9 @links 1
+jump 29 lessThan i:15:9 0
+getlink link:16:8 i:15:9
+sensor ltype:17:8 link:16:8 @type
+jump 12 notEqual ltype:17:8 @logic-display
+set size:11:4 80
+set display:9:4 link:16:8
+jump 27 always
+jump 16 notEqual ltype:17:8 @large-logic-display
+set size:11:4 176
+set display:9:4 link:16:8
+jump 27 always
+jump 19 notEqual ltype:17:8 @switch
+set alert_sw:7:4 link:16:8
+jump 27 always
+op equal &t0 ltype:17:8 @power-node
+op equal &t1 ltype:17:8 @power-node-large
+op or &t2 &t0 &t1
+jump 25 equal &t2 0
+set node:8:4 link:16:8
+jump 27 always
+jump 27 notEqual ltype:17:8 @message
+set message:10:4 link:16:8
+op sub i:15:9 i:15:9 1
+jump 5 always
+set links:35:4 @links
+set x:36:4 0
+set dx:37:4 1
+set dy:38:4 1
+set y1:39:4 0
+set n:40:4 0
+set bars:41:4 0
+set barh:43:4 size:11:4
+set vault:44:4 0
+jump 247 notEqual links:35:4 @links
+jump 246 notEqual links:35:4 @links
+draw clear 0 0 0
+set x:36:4 0
+jump 45 notEqual split_mode:5:4 0
+op div barh:43:4 size:11:4 vault:44:4
+jump 46 always
+set barh:43:4 size:11:4
+set vault:44:4 0
+op div dx:37:4 size:11:4 bars:41:4
+set bars:41:4 0
+set bar:42:4 0
+set y1:39:4 0
+op sub i:86:17 @links 1
+jump 231 lessThan i:86:17 0
+getlink link:87:16 i:86:17
+sensor ltype:88:16 link:87:16 @type
+op equal &t0 ltype:88:16 @logic-display
+op equal &t1 ltype:88:16 @large-logic-display
+op or &t2 &t0 &t1
+op equal &t3 ltype:88:16 @message
+op or &t4 &t2 &t3
+op equal &t5 ltype:88:16 @switch
+op or &t6 &t4 &t5
+jump 64 equal &t6 0
+jump 229 always
+op add vault:44:4 vault:44:4 1
+draw color 255 255 255
+jump 71 notEqual split_mode:5:4 0
+draw line 0 y1:39:4 size:11:4 y1:39:4
+set bar:42:4 0
+set x:36:4 0
+jump 72 always
+draw line x:36:4 0 x:36:4 size:11:4
+set old_bar:105:20 bar:42:4
+op equal &t7 ltype:88:16 @liquid-container
+op equal &t8 ltype:88:16 @liquid-tank
+op or &t9 &t7 &t8
+jump 79 equal &t9 0
+sensor max_rsrc:34:4 link:87:16 @liquidCapacity
+jump 80 always
+sensor max_rsrc:34:4 link:87:16 @itemCapacity
+set max:116:24 0
+sensor &t10 link:87:16 @itemCapacity
+jump 85 strictEqual &t10 null
+sensor max:116:24 link:87:16 @itemCapacity
+jump 92 always
+sensor &t11 link:87:16 @liquidCapacity
+jump 89 strictEqual &t11 null
+sensor max:116:24 link:87:16 @liquidCapacity
+jump 92 always
+sensor &t12 link:87:16 @ammoCapacity
+jump 92 equal &t12 null
+sensor max:116:24 link:87:16 @ammoCapacity
+print ltype:88:16
+print " max="
+print max:116:24
+sensor rsrc:47:35 link:87:16 @copper
+set r:47:26 216
+set g:47:29 157
+set b:47:32 115
+set &rdrawBar:47:6 101
+jump 249 always
+sensor rsrc:47:35 link:87:16 @lead
+set r:47:26 147
+set g:47:29 133
+set b:47:32 178
+set &rdrawBar:47:6 107
+jump 249 always
+sensor rsrc:47:35 link:87:16 @metaglass
+set r:47:26 255
+set g:47:29 255
+set b:47:32 255
+set &rdrawBar:47:6 113
+jump 249 always
+sensor rsrc:47:35 link:87:16 @graphite
+set r:47:26 149
+set g:47:29 171
+set b:47:32 216
+set &rdrawBar:47:6 119
+jump 249 always
+sensor rsrc:47:35 link:87:16 @sand
+set r:47:26 247
+set g:47:29 203
+set b:47:32 164
+set &rdrawBar:47:6 125
+jump 249 always
+sensor rsrc:47:35 link:87:16 @coal
+set r:47:26 64
+set g:47:29 64
+set b:47:32 64
+set &rdrawBar:47:6 131
+jump 249 always
+sensor rsrc:47:35 link:87:16 @titanium
+set r:47:26 164
+set g:47:29 184
+set b:47:32 250
+set &rdrawBar:47:6 137
+jump 249 always
+sensor rsrc:47:35 link:87:16 @thorium
+set r:47:26 255
+set g:47:29 125
+set b:47:32 180
+set &rdrawBar:47:6 143
+jump 249 always
+sensor rsrc:47:35 link:87:16 @scrap
+set r:47:26 155
+set g:47:29 146
+set b:47:32 139
+set &rdrawBar:47:6 149
+jump 249 always
+sensor rsrc:47:35 link:87:16 @silicon
+set r:47:26 79
+set g:47:29 80
+set b:47:32 98
+set &rdrawBar:47:6 155
+jump 249 always
+sensor rsrc:47:35 link:87:16 @plastanium
+set r:47:26 203
+set g:47:29 216
+set b:47:32 126
+set &rdrawBar:47:6 161
+jump 249 always
+sensor rsrc:47:35 link:87:16 @phase-fabric
+set r:47:26 241
+set g:47:29 149
+set b:47:32 131
+set &rdrawBar:47:6 167
+jump 249 always
+sensor rsrc:47:35 link:87:16 @surge-alloy
+set r:47:26 231
+set g:47:29 193
+set b:47:32 36
+set &rdrawBar:47:6 173
+jump 249 always
+sensor rsrc:47:35 link:87:16 @spore-pod
+set r:47:26 98
+set g:47:29 48
+set b:47:32 255
+set &rdrawBar:47:6 179
+jump 249 always
+sensor rsrc:47:35 link:87:16 @blast-compound
+set r:47:26 255
+set g:47:29 62
+set b:47:32 43
+set &rdrawBar:47:6 185
+jump 249 always
+sensor rsrc:47:35 link:87:16 @pyratite
+set r:47:26 255
+set g:47:29 134
+set b:47:32 55
+set &rdrawBar:47:6 191
+jump 249 always
+sensor rsrc:47:35 link:87:16 @water
+set r:47:26 89
+set g:47:29 106
+set b:47:32 184
+set &rdrawBar:47:6 197
+jump 249 always
+sensor rsrc:47:35 link:87:16 @cryofluid
+set r:47:26 110
+set g:47:29 205
+set b:47:32 236
+set &rdrawBar:47:6 203
+jump 249 always
+sensor rsrc:47:35 link:87:16 @oil
+set r:47:26 107
+set g:47:29 103
+set b:47:32 95
+set &rdrawBar:47:6 209
+jump 249 always
+sensor rsrc:47:35 link:87:16 @slag
+set r:47:26 207
+set g:47:29 159
+set b:47:32 0
+set &rdrawBar:47:6 215
+jump 249 always
+op equal &t10 split_mode:5:4 1
+op equal &t11 old_bar:105:20 bar:42:4
+op land &t12 &t10 &t11
+jump 225 equal &t12 0
+set r:47:26 0
+set g:47:29 0
+set b:47:32 0
+set rsrc:47:35 1
+set &rdrawBar:47:6 225
+jump 249 always
+jump 227 notEqual split_mode:5:4 0
+op add y1:39:4 y1:39:4 barh:43:4
+jump 229 lessThanEq bar:42:4 bars:41:4
+set bars:41:4 bar:42:4
+op sub i:86:17 i:86:17 1
+jump 52 always
+jump 236 notEqual split_mode:5:4 -1
+jump 235 lessThanEq bars:41:4 vault:44:4
+set split_mode:5:4 0
+jump 236 always
+set split_mode:5:4 1
+drawflush display:9:4
+print "[violet]Rsrc-20240325-5[white]"
+op strictEqual &t0 vault:44:4 0
+jump 241 equal &t0 0
+print "[red]Connect a resource container please[white]\n"
+op strictEqual &t1 display:9:4 null
+jump 244 equal &t1 0
+print "[red]Connect a display please.[white]"
+printflush message:10:4
+jump 39 always
+jump 38 always
+printflush message:10:4
+end
+jump 252 notEqual rsrc:47:35 0
+set &fdrawBar:47:6 null
+set @counter &rdrawBar:47:6
+op add bar:42:4 bar:42:4 1
+draw color r:47:26 g:47:29 b:47:32
+op div pct:51:8 rsrc:47:35 max_rsrc:34:4
+op mul &t0:drawBar:47:6 barh:43:4 pct:51:8
+op ceil height:52:8 &t0:drawBar:47:6
+op add width:53:8 dx:37:4 1
+draw rect x:36:4 y1:39:4 width:53:8 height:52:8
+op lessThan &t1:drawBar:47:6 pct:51:8 alert:4:4
+op strictEqual &t2:drawBar:47:6 alert_sw:7:4 null
+sensor &t3:drawBar:47:6 alert_sw:7:4 @enabled
+op equal &t4:drawBar:47:6 &t3:drawBar:47:6 1
+op or &t5:drawBar:47:6 &t2:drawBar:47:6 &t4:drawBar:47:6
+op land &t6:drawBar:47:6 &t1:drawBar:47:6 &t5:drawBar:47:6
+jump 281 equal &t6:drawBar:47:6 0
+op div &t7:drawBar:47:6 dx:37:4 3
+op div &t8:drawBar:47:6 barh:43:4 10
+op min &t9:drawBar:47:6 &t7:drawBar:47:6 &t8:drawBar:47:6
+op max w:56:12 2 &t9:drawBar:47:6
+op sub &t10:drawBar:47:6 width:53:8 w:56:12
+op div &t11:drawBar:47:6 &t10:drawBar:47:6 2
+op add px:57:12 x:36:4 &t11:drawBar:47:6
+op mul &t12:drawBar:47:6 0.2 barh:43:4
+op add py:58:12 y1:39:4 &t12:drawBar:47:6
+draw color 255 0 0
+draw rect px:57:12 py:58:12 w:56:12 w:56:12
+op mul &t13:drawBar:47:6 2 w:56:12
+op add py:58:12 py:58:12 &t13:drawBar:47:6
+op mul h:62:12 3 w:56:12
+draw rect px:57:12 py:58:12 w:56:12 h:62:12
+op add x:36:4 x:36:4 dx:37:4
+set &fdrawBar:47:6 null
+set @counter &rdrawBar:47:6
+

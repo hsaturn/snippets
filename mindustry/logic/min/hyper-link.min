@@ -1,0 +1,393 @@
+set v:6:4 "hyper-link 20240329-3"
+set enable_all:29:4 0
+set srce_block:34:4 null
+set srce_size:35:4 null
+set core:36:4 null
+set heap:37:4 0
+set user_ptr:50:4 0
+set user_size:51:4 5
+op rand &t0 100000
+op floor &t1 &t0
+op mul cpu_id:52:4 &t1 100
+set loop:53:4 0
+set gc:56:4 0
+set avg_ticks:151:4 37
+op sub last_tick:152:4 @tick avg_ticks:151:4
+wait 1
+print "[violet]hyper-link 20240329-3[white]"
+print " #"
+print id:27:4
+print "\n"
+op sub ticks:159:8 @tick last_tick:152:4
+set last_tick:152:4 @tick
+op mul &t2 0.9 avg_ticks:151:4
+op mul &t3 0.09999999999999998 ticks:159:8
+op add avg_ticks:151:4 &t2 &t3
+op div latency:163:8 avg_ticks:151:4 60
+op mul &t4 latency:163:8 1000
+op floor &t5 &t4
+op div latency:163:8 &t5 1000
+print "cpu #"
+print cpu_id:52:4
+print " loop "
+print loop:53:4
+print " lat."
+print latency:163:8
+print "\n"
+op sub i:166:13 @links 1
+jump 320 lessThan i:166:13 0
+set check:167:12 null
+jump 41 notEqual id:27:4 null
+set enable_all:29:4 1
+getlink link:170:12 i:166:13
+sensor ltype:171:12 link:170:12 @type
+jump 46 notEqual ltype:171:12 @message
+set message:28:4 link:170:12
+jump 301 always
+op equal &t6 ltype:171:12 @core-shard
+op equal &t7 ltype:171:12 @core-foundation
+op or &t8 &t6 &t7
+op equal &t9 ltype:171:12 @core-nucleus
+op or &t10 &t8 &t9
+jump 54 equal &t10 0
+set core:36:4 link:170:12
+jump 301 always
+op equal &t11 ltype:171:12 @memory-cell
+op equal &t12 ltype:171:12 @memory-bank
+op or &t13 &t11 &t12
+jump 201 equal &t13 0
+set dump:179:16 0
+jump 66 equal core:36:4 0
+print "Dumping to memory\n"
+set id:27:4 0
+set dump:179:16 1
+op floor &t14 @time
+write &t14 link:170:12 4
+jump 137 always
+read &t14 link:170:12 0
+jump 133 notEqual &t14 65
+read cell_id:188:20 link:170:12 1
+op add next_id:189:20 cell_id:188:20 1
+read &t15 link:170:12 4
+op sub &t16 @time &t15
+op floor last_update:190:20 &t16
+op strictEqual &t17 id:27:4 null
+op greaterThan &t18 id:27:4 next_id:189:20
+op or &t19 &t17 &t18
+jump 78 equal &t19 0
+set id:27:4 next_id:189:20
+jump 85 lessThanEq last_update:190:20 10000
+print "[yellow]Resync, id="
+print id:27:4
+print "[white]\n"
+write 0 link:170:12 0
+write 0 link:170:12 1
+set id:27:4 null
+jump 132 equal id:27:4 null
+jump 97 greaterThan id:27:4 cell_id:188:20
+print "[cyan]Transmitting data to cell #"
+print cell_id:188:20
+print ", id="
+print id:27:4
+print "\n[white]"
+write time:31:4 link:170:12 4
+op floor &t20 @time
+write &t20 link:170:12 4
+set dump:179:16 1
+jump 132 always
+read &t20 link:170:12 4
+jump 131 greaterThanEq time:31:4 &t20
+print "Retrieving data from cell #"
+print cell_id:188:20
+print ", id="
+print id:27:4
+print "\n"
+read core_max_rsrc:23:4 link:170:12 2
+read link_low_rsrc:24:4 link:170:12 3
+read time:31:4 link:170:12 4
+read min_power:30:4 link:170:12 5
+read heap:37:4 link:170:12 6
+read copper:25:4 link:170:12 10
+read coal:25:12 link:170:12 11
+read lead:25:18 link:170:12 12
+read sand:25:24 link:170:12 13
+read glass:25:30 link:170:12 14
+read pyr:25:37 link:170:12 15
+read tit:25:42 link:170:12 16
+read tho:25:47 link:170:12 17
+read sil:26:4 link:170:12 18
+read scrap:26:9 link:170:12 19
+read graphite:26:16 link:170:12 20
+read plast:26:26 link:170:12 21
+read phase:26:33 link:170:12 22
+read surge:26:40 link:170:12 23
+read blast:26:47 link:170:12 24
+read spore:26:54 link:170:12 25
+jump 128 equal &t12 0
+set srce_size:35:4 512
+jump 129 always
+set srce_size:35:4 64
+set srce_block:34:4 link:170:12
+jump 132 always
+print "\n"
+jump 137 always
+jump 137 strictEqual id:27:4 null
+op floor &t15 @time
+write &t15 link:170:12 4
+set dump:179:16 1
+jump 200 equal dump:179:16 0
+print "Setting id "
+print id:27:4
+print "\n"
+write 65 link:170:12 0
+write id:27:4 link:170:12 1
+write core_max_rsrc:23:4 link:170:12 2
+write link_low_rsrc:24:4 link:170:12 3
+write min_power:30:4 link:170:12 5
+write heap:37:4 link:170:12 6
+write copper:25:4 link:170:12 10
+write coal:25:12 link:170:12 11
+write lead:25:18 link:170:12 12
+write sand:25:24 link:170:12 13
+write glass:25:30 link:170:12 14
+write pyr:25:37 link:170:12 15
+write tit:25:42 link:170:12 16
+write tho:25:47 link:170:12 17
+write sil:26:4 link:170:12 18
+write scrap:26:9 link:170:12 19
+write graphite:26:16 link:170:12 20
+write plast:26:26 link:170:12 21
+write phase:26:33 link:170:12 22
+write surge:26:40 link:170:12 23
+write blast:26:47 link:170:12 24
+write spore:26:54 link:170:12 25
+jump 200 equal srce_block:34:4 null
+read &t15 srce_block:34:4 1
+op lessThan burn:278:24 &t15 id:27:4
+set destidx:279:24 heap:37:4
+set idx:280:24 heap:37:4
+read byte:281:24 link:170:12 idx:280:24
+op mod &t16 byte:281:24 100
+jump 200 equal &t16 0
+set count:286:28 &t16
+op add &t18 idx:280:24 1
+read &t19 link:170:12 &t18
+jump 180 notEqual &t19 0
+op add idx:280:24 idx:280:24 count:286:28
+print "[green]skipping msg "
+print idx:280:24
+print "[white]\n"
+jump 197 always
+jump 186 equal burn:278:24 0
+op add &t20 idx:280:24 1
+write 0 link:170:12 &t20
+print "[green]burning msg "
+print idx:280:24
+print "[white]\n"
+op sub from:298:32 byte:281:24 count:286:28
+print "[green]fwd msg "
+print idx:280:24
+print "[white]\n"
+set &t20 count:286:28
+op sub count:286:28 count:286:28 1
+jump 197 equal &t20 0
+read &t21 link:170:12 idx:280:24
+write &t21 srce_block:34:4 idx:280:24
+op add idx:280:24 idx:280:24 1
+jump 190 always
+read byte:281:24 link:170:12 idx:280:24
+op add idx:280:24 idx:280:24 1
+jump 169 always
+jump 301 always
+op equal &t14 ltype:171:12 @laser-drill
+op equal &t15 ltype:171:12 @pneumatic-drill
+op or &t16 &t14 &t15
+jump 236 equal &t16 0
+sensor &t17 link:170:12 @copper
+jump 209 equal &t17 0
+set check:167:12 copper:25:4
+jump 232 always
+sensor &t18 link:170:12 @scrap
+jump 213 equal &t18 0
+set check:167:12 scrap:26:9
+jump 232 always
+sensor &t19 link:170:12 @sand
+jump 217 equal &t19 0
+set check:167:12 sand:25:24
+jump 232 always
+sensor &t20 link:170:12 @lead
+jump 221 equal &t20 0
+set check:167:12 lead:25:18
+jump 232 always
+sensor &t21 link:170:12 @titanium
+jump 225 equal &t21 0
+set check:167:12 tit:25:42
+jump 232 always
+sensor &t22 link:170:12 @coal
+jump 229 equal &t22 0
+set check:167:12 coal:25:12
+jump 232 always
+sensor &t23 link:170:12 @thorium
+jump 232 equal &t23 0
+set check:167:12 tho:25:47
+print "Found ? "
+print check:167:12
+print "\n"
+jump 301 always
+op equal &t17 ltype:171:12 @multi-press
+op equal &t18 ltype:171:12 @graphite-press
+op or &t19 &t17 &t18
+jump 242 equal &t19 0
+set check:167:12 graphite:26:16
+jump 301 always
+jump 247 notEqual ltype:171:12 @mass-driver
+sensor &t20 link:170:12 @totalItems
+op greaterThan enabled:324:16 &t20 50
+control enabled link:170:12 enabled:324:16 0 0
+jump 301 always
+jump 251 notEqual ltype:171:12 @pulverizer
+jump 250 greaterThanEq sand:25:24 scrap:26:9
+set check:167:12 sand:25:24
+jump 301 always
+jump 254 notEqual ltype:171:12 @plastanium-compressor
+set check:167:12 plast:26:26
+jump 301 always
+jump 259 notEqual ltype:171:12 @disassembler
+op min &t20 sand:25:24 tit:25:42
+op min &t21 graphite:26:16 tho:25:47
+op min check:167:12 &t20 &t21
+jump 301 always
+jump 262 notEqual ltype:171:12 @phase-weaver
+set check:167:12 phase:26:33
+jump 301 always
+op equal &t20 ltype:171:12 @silicon-smelter
+op equal &t21 ltype:171:12 @silicon-crucible
+op or &t22 &t20 &t21
+jump 268 equal &t22 0
+set check:167:12 sil:26:4
+jump 301 always
+jump 293 notEqual ltype:171:12 @switch
+set sw:347:16 switch1
+sensor &t23 sw:347:16 @enabled
+jump 292 equal &t23 0
+set size:81:16 1
+set &rmalloc:81:0 275
+jump 324 always
+set idx:349:20 &fmalloc:81:0
+print "msg="
+print idx:349:20
+print "\n"
+set mem:351:22.&len srce_size:35:4
+write loop:53:4 srce_block:34:4 idx:349:20
+jump 287 lessThanEq idx:349:20 0
+print "mem="
+print idx:349:20
+print "\n"
+set mem:355:26.&len srce_size:35:4
+jump 292 always
+jump 290 notEqual idx:349:20 -1
+print "[red]Memory not available[white]\n"
+jump 292 always
+jump 292 notEqual idx:349:20 0
+print "[red]Out of memory[white]\n"
+jump 301 always
+set link:8:18 link:170:12
+set &ronHandle:8:0 296
+jump 383 always
+set &t23 &fonHandle:8:0
+jump 301 notEqual &t23 0
+print "Not handled: "
+print link:170:12
+print "\n"
+op notEqual &t24 id:27:4 null
+op strictEqual &t25 check:167:12 null
+op equal &t26 &t25 0
+op land &t27 &t24 &t26
+jump 318 equal &t27 0
+op lessThan enabled:368:16 check:167:12 link_low_rsrc:24:4
+jump 310 equal enabled:368:16 0
+set &t28 " on "
+jump 311 always
+set &t28 " off "
+print ltype:171:12
+print &t28
+print check:167:12
+print "/"
+print link_low_rsrc:24:4
+print "\n"
+control enabled link:170:12 enabled:368:16 0 0
+op sub i:166:13 i:166:13 1
+jump 37 always
+op add loop:53:4 loop:53:4 1
+printflush message:28:4
+jump 15 always
+end
+op strictEqual &t0:malloc:81:0 srce_block:34:4 null
+jump 328 equal &t0:malloc:81:0 0
+set &fmalloc:81:0 0
+set @counter &rmalloc:81:0
+jump 331 notEqual heap:37:4 0
+set &fmalloc:81:0 0
+set @counter &rmalloc:81:0
+jump 334 notEqual size:81:16 0
+set &fmalloc:81:0 0
+set @counter &rmalloc:81:0
+set mem:87:10.&len srce_size:35:4
+read &t1:malloc:81:0 srce_block:34:4 0
+op equal &t2:malloc:81:0 &t1:malloc:81:0 65
+op equal &t3:malloc:81:0 id:27:4 0
+read &t4:malloc:81:0 srce_block:34:4 1
+op sub &t5:malloc:81:0 id:27:4 1
+op equal &t6:malloc:81:0 &t4:malloc:81:0 &t5:malloc:81:0
+op or &t7:malloc:81:0 &t3:malloc:81:0 &t6:malloc:81:0
+op land &t8:malloc:81:0 &t2:malloc:81:0 &t7:malloc:81:0
+jump 349 equal &t8:malloc:81:0 0
+print "Malloc "
+print size:81:16
+print " bytes sz="
+print srce_size:35:4
+print "\n"
+op floor time:92:8 @time
+set idx:93:8 heap:37:4
+op add &t9:malloc:81:0 cpu_id:52:4 size:81:16
+op add cpu_id_size:94:8 &t9:malloc:81:0 2
+op add &t10:malloc:81:0 idx:93:8 size:81:16
+jump 381 greaterThanEq &t10:malloc:81:0 srce_size:35:4
+read byte:97:12 srce_block:34:4 idx:93:8
+op add &t11:malloc:81:0 idx:93:8 1
+read tmsg:98:12 srce_block:34:4 &t11:malloc:81:0
+jump 363 notEqual tmsg:98:12 0
+write cpu_id_size:94:8 srce_block:34:4 idx:93:8
+write time:92:8 srce_block:34:4 &t11:malloc:81:0
+op add &fmalloc:81:0 idx:93:8 2
+set @counter &rmalloc:81:0
+jump 375 notEqual byte:97:12 0
+print "Found area "
+print idx:93:8
+print "\n"
+write cpu_id_size:94:8 srce_block:34:4 idx:93:8
+write time:92:8 srce_block:34:4 &t11:malloc:81:0
+wait 0.2
+read &t12:malloc:81:0 srce_block:34:4 idx:93:8
+jump 374 notEqual &t12:malloc:81:0 cpu_id_size:94:8
+op add &fmalloc:81:0 idx:93:8 2
+set @counter &rmalloc:81:0
+jump 378 always
+jump 378 notEqual byte:97:12 1
+set &fmalloc:81:0 -1
+set @counter &rmalloc:81:0
+op mod &t15:malloc:81:0 byte:97:12 100
+op add idx:93:8 idx:93:8 &t15:malloc:81:0
+jump 353 always
+set &fmalloc:81:0 0
+set @counter &rmalloc:81:0
+sensor ltype:9:8 link:8:18 @type
+jump 390 notEqual ltype:9:8 @water-extractor
+op lessThan enabled:11:12 coal:25:12 core_max_rsrc:23:4
+control enabled extractor1 enabled:11:12 0 0
+control enabled extractor2 enabled:11:12 0 0
+set &fonHandle:8:0 1
+set @counter &ronHandle:8:0
+set &fonHandle:8:0 null
+set @counter &ronHandle:8:0
+

@@ -1,0 +1,32 @@
+set display_version:2:4 "[violet]memory-dump-20243003-1[white]\n"
+op sub i:6:13 @links 1
+jump 29 lessThan i:6:13 0
+getlink link:7:12 i:6:13
+sensor ltype:8:12 link:7:12 @type
+jump 8 notEqual ltype:8:12 @message
+set message:3:4 link:7:12
+jump 27 always
+op equal &t0 ltype:8:12 @memory-cell
+op equal &t1 ltype:8:12 @memory-bank
+op or &t2 &t0 &t1
+jump 27 equal &t2 0
+print display_version:2:4
+print "-----------"
+set group:15:16 4
+set cell:16:21 0
+jump 27 greaterThanEq cell:16:21 64
+op mod &t3 cell:16:21 group:15:16
+jump 22 notEqual &t3 0
+print "\n"
+print cell:16:21
+print ": "
+read &t4 link:7:12 cell:16:21
+print &t4
+print " "
+op add cell:16:21 cell:16:21 1
+jump 16 always
+op sub i:6:13 i:6:13 1
+jump 2 always
+printflush message:3:4
+jump 1 always
+

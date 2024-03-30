@@ -1,0 +1,25 @@
+const version : String = "memory-dump-20243003-1";
+var display_version : String = "[violet]" + version + "[white]\n";
+var message;
+
+while (true) {
+    for (let i = Vars.links - 1; i >= 0; i--) {
+        var link = getLink(i);
+        var ltype = link.type;
+        if (ltype == Blocks.message)
+            message = link;
+        else if (ltype == Blocks.memoryCell || ltype == Blocks.memoryBank) {
+            print(display_version);
+            print("-----------");
+            const memory = new Memory(link, 64);
+            var group = 4;
+            for (let cell = 0; cell < 64; cell++)
+            {
+                if (cell % group == 0) print("\n", cell, ": ");
+                print(memory[cell], " ");
+            }
+        }
+    }
+    printFlush(message);
+}
+

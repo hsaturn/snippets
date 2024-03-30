@@ -1,0 +1,103 @@
+set version:1:4 "Switch 20240329-3"
+set enabled:9:4 1
+set power:13:4 null
+set factor:14:4 0.5
+set container:15:4 null
+set main_enabled:16:4 1
+jump 101 equal @links links:11:4
+print version:1:4
+print "\n"
+set unloader_enable:31:8 null
+op sub i:32:13 @links 1
+jump 88 lessThan i:32:13 0
+getlink link:33:12 i:32:13
+sensor ltype:34:12 link:33:12 @type
+jump 23 notEqual ltype:34:12 @switch
+set sw:8:4 link:33:12
+sensor &t0 link:33:12 @enabled
+op land &t1 main_enabled:16:4 &t0
+op strictEqual &t2 power:13:4 null
+op greaterThan &t3 power:13:4 0
+op or &t4 &t2 &t3
+op land enabled:9:4 &t1 &t4
+jump 86 always
+op equal &t0 ltype:34:12 @container
+op equal &t1 ltype:34:12 @vault
+op or &t2 &t0 &t1
+jump 29 equal &t2 0
+set container:15:4 link:33:12
+jump 86 always
+op equal &t3 ltype:34:12 @unloader
+op equal &t4 ltype:34:12 @sorter
+op or &t5 &t3 &t4
+op equal &t6 ltype:34:12 @inverted-sorter
+op or &t7 &t5 &t6
+jump 59 equal &t7 0
+jump 57 equal container:15:4 0
+jump 38 notEqual unloader_enable:31:8 null
+set unloader_enable:31:8 1
+sensor item:46:20 link:33:12 @config
+sensor item_count:47:20 container:15:4 item:46:20
+sensor &t8 container:15:4 @itemCapacity
+op mul min:49:20 factor:14:4 &t8
+op greaterThanEq enabled:50:20 item_count:47:20 min:49:20
+jump 48 notEqual enabled:50:20 0
+print "[cyan]Need "
+print item:46:20
+print "[white]\n"
+jump 55 always
+print "Enough "
+print item:46:20
+print "("
+print item_count:47:20
+print "/"
+print min:49:20
+print ")\n"
+op land unloader_enable:31:8 unloader_enable:31:8 enabled:50:20
+jump 58 always
+print "[yellow]Please connect a vault or a container\n[white]"
+jump 86 always
+op equal &t8 ltype:34:12 @power-node
+op equal &t9 ltype:34:12 @power-node-large
+op or &t10 &t8 &t9
+jump 74 equal &t10 0
+sensor &t11 link:33:12 @powerNetIn
+sensor &t12 link:33:12 @powerNetOut
+op sub &t13 &t11 &t12
+sensor &t14 link:33:12 @powerNetStored
+op div &t15 &t14 2
+op add power:13:4 &t13 &t15
+op floor &t16 power:13:4
+print "Power + capa = "
+print &t16
+print "\n"
+jump 86 always
+jump 77 notEqual ltype:34:12 @message
+set message:10:4 link:33:12
+jump 86 always
+jump 86 strictEqual enabled:9:4 null
+jump 81 equal enabled:9:4 0
+set &t11 "on\n"
+jump 82 always
+set &t11 "off\n"
+print ltype:34:12
+print ": "
+print &t11
+control enabled link:33:12 main_enabled:16:4 0 0
+op sub i:32:13 i:32:13 1
+jump 11 always
+op strictEqual &t0 unloader_enable:31:8 null
+jump 92 equal &t0 0
+set main_enabled:16:4 1
+jump 96 always
+set main_enabled:16:4 unloader_enable:31:8
+print "Enough rsrc: "
+print main_enabled:16:4
+print "\n"
+op strictEqual &t1 sw:8:4 null
+jump 99 equal &t1 0
+print "Connect a switch please"
+printflush message:10:4
+jump 6 always
+end
+

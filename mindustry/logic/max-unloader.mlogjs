@@ -1,0 +1,72 @@
+// vim: syntax=javascript
+var version = "max-unloader-20240329";
+var vault: AnyBuilding;
+var unloader: AnyBuilding;
+var message = getBuilding("message1");
+var keep = 100;
+
+var item;
+var count;
+
+
+function getmax(c, itm)
+{
+    
+    if (c >= count) {
+        item = itm;
+        count = c;
+    }
+}
+
+function check(building: AnyBuilding, unloader: AnyBuilding) {
+    item = undefined;
+    count = 0;
+
+    if (building === undefined) return;
+    
+    getmax(building.copper,    Items.copper);
+    getmax(building.lead,      Items.lead);
+    getmax(building.metaglass, Items.metaglass);
+    getmax(building.graphite,  Items.graphite);
+
+    getmax(building.sand,     Items.sand);
+    getmax(building.coal,     Items.coal);
+    getmax(building.titanium, Items.titanium);
+    getmax(building.thorium,  Items.thorium);
+
+    getmax(building.scrap,       Items.scrap);
+    getmax(building.silicon,     Items.silicon);
+    getmax(building.plastanium,  Items.plastanium);
+    getmax(building.phaseFabric, Items.phaseFabric);
+
+    getmax(building.surgeAlloy,    Items.surgeAlloy);
+    getmax(building.sporePod,      Items.sporePod);
+    getmax(building.blastCompound, Items.blastCompound);
+    getmax(building.pyratite,      Items.pyratite);
+
+
+    if (count > keep)
+    {
+        asm`control config ${unloader} ${item}`;
+        asm`control enabled ${unloader} true 0 0 0`;
+    }
+    else
+        asm`control enabled ${unloader} false 0 0 0`;
+}
+
+for (let i = Vars.links - 1; i >= 0; i--) {
+    var unhandled: Boolean = false;
+    var container: AnyBuilding = getLink(i);
+    var ltype = container.type;
+    if (ltype == Blocks.coreNucleus || ltype == Blocks.coreFoundation || ltype == Blocks.coreShard
+        || ltype == Blocks.vault || ltype == Blocks.container) {
+        for (let j = Vars.links - 1; j >= 0; j--) {
+            var unloader = getLink(j);
+            var jtype = unloader.type;
+            if (jtype == Blocks.unloader)
+                check(container, unloader);
+        }
+    }
+}
+
+

@@ -1,0 +1,89 @@
+set i:3:9 0
+jump 87 greaterThanEq i:3:9 @links
+getlink link:4:8 i:3:9
+sensor ltype:5:8 link:4:8 @type
+jump 7 notEqual ltype:5:8 @message
+set message:1:4 link:4:8
+jump 85 always
+print "----------"
+print ltype:5:8
+print "----------\n"
+sensor &t0 link:4:8 @config
+print "config     : "
+print &t0
+print "\n"
+sensor &t1 link:4:8 @efficiency
+print "efficiency : "
+print &t1
+print "\n"
+sensor &t2 link:4:8 @flag
+print "flag       : "
+print &t2
+print "\n"
+sensor &t3 link:4:8 @health
+print "health     : "
+print &t3
+print "\n"
+sensor &t4 link:4:8 @heat
+print "heat       : "
+print &t4
+print "\n"
+sensor &t5 link:4:8 @totalItems
+print "total items: "
+print &t5
+print "\n"
+sensor &t6 link:4:8 @itemCapacity
+print "item capa  : "
+print &t6
+print "\n"
+sensor &t7 link:4:8 @liquidCapacity
+print "liquid capa: "
+print &t7
+print "\n"
+sensor &t8 link:4:8 @powerCapacity
+print "power capa : "
+print &t8
+print "\n"
+sensor &t9 link:4:8 @powerNetCapacity
+print "pnet capa  : "
+print &t9
+print "\n"
+sensor &t10 link:4:8 @powerNetIn
+print "pnet in    : "
+print &t10
+print "\n"
+sensor &t11 link:4:8 @powerNetOut
+print "pnet out   : "
+print &t11
+print "\n"
+sensor &t12 link:4:8 @powerNetStored
+print "pnet stored: "
+print &t12
+print "\n"
+sensor &t13 link:4:8 @totalPower
+print "total power: "
+print &t13
+print "\n"
+sensor &t14 link:4:8 @progress
+print "progress   : "
+print &t14
+print "\n"
+sensor &t15 link:4:8 @size
+print "size       : "
+print &t15
+print "\n"
+sensor &t16 link:4:8 @rotation
+print "rotation   : "
+print &t16
+print "\n"
+sensor &t17 link:4:8 @x
+sensor &t18 link:4:8 @y
+print "x,y        : "
+print &t17
+print ","
+print &t18
+print "\n"
+op add i:3:9 i:3:9 1
+jump 1 always
+printflush message:1:4
+
