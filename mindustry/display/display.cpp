@@ -205,6 +205,7 @@ int main(int argc, const char* argv[])
       cerr << "     -mlogjs    inline function, no var declaration, asm inline code etc.." << endl;
       cerr << "     -speed     (vs size) compute minimal segments points" << endl;
       cerr << "     -chars ... List of allowed chars." << endl;
+      cerr << "     -text ...  Gives asm from drawing text." << endl;
       cerr << endl << endl;
       exit(1);
     }
@@ -216,6 +217,16 @@ int main(int argc, const char* argv[])
       speed = true;
     else if (opt == "-mlogjs")
       mlogjs = true;
+    else if (opt == "-text")
+    {
+      string text = argv[arg++];
+      while(text.length())
+      {
+        cout << "  drawChar(" << (int)text[0] << ");" << endl;
+        text.erase(0,1);
+      }
+      exit(0);
+    }
     else if (opt == "-i")
     {
       int ind = atoi(argv[arg++]);
@@ -225,6 +236,7 @@ int main(int argc, const char* argv[])
       file = opt;
   }
   sort(chars.begin(), chars.end());
+  chars.erase(std::unique(chars.begin(), chars.end()), chars.end());
   cerr << "file: " << file << endl;
   if (chars.length()) cerr << "chars: " << chars << endl;
   vector<uint32_t> charset;
