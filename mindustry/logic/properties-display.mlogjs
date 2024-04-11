@@ -1,120 +1,31 @@
-set version:1:4 "vault burner 20240326"
-set message:4:4 message1
-set vault:6:15 container1
-set unloader:6:36 unloader2
-set incinerator:6:59 incinerator1
-set &rcheck:6:0 7
-jump 10 always
-jump 2 always
-printflush message:4:4
-end
-sensor &t0:check:6:0 vault:6:15 @itemCapacity
-op sub max:8:8 &t0:check:6:0 3
-set enabled:9:8 1
-sensor copper:10:8 vault:6:15 @copper
-sensor lead:11:8 vault:6:15 @lead
-sensor glass:12:8 vault:6:15 @metaglass
-sensor graphite:13:8 vault:6:15 @graphite
-sensor sand:15:8 vault:6:15 @sand
-sensor coal:16:8 vault:6:15 @coal
-sensor titanium:17:8 vault:6:15 @titanium
-sensor thorium:18:8 vault:6:15 @thorium
-sensor scrap:20:8 vault:6:15 @scrap
-sensor silicium:21:8 vault:6:15 @silicon
-sensor plastanium:22:8 vault:6:15 @plastanium
-sensor phase:23:8 vault:6:15 @phase-fabric
-sensor surge:25:8 vault:6:15 @surge-alloy
-sensor spore:26:8 vault:6:15 @spore-pod
-sensor blast:27:8 vault:6:15 @blast-compound
-sensor pyratite:28:8 vault:6:15 @pyratite
-op sub m:30:8 max:8:8 30
-op greaterThanEq &t1:check:6:0 copper:10:8 m:30:8
-op greaterThanEq &t2:check:6:0 lead:11:8 m:30:8
-op land &t3:check:6:0 &t1:check:6:0 &t2:check:6:0
-op greaterThanEq &t4:check:6:0 glass:12:8 m:30:8
-op land &t5:check:6:0 &t3:check:6:0 &t4:check:6:0
-op greaterThanEq &t6:check:6:0 graphite:13:8 m:30:8
-op land &t7:check:6:0 &t5:check:6:0 &t6:check:6:0
-op greaterThanEq &t8:check:6:0 sand:15:8 m:30:8
-op land &t9:check:6:0 &t7:check:6:0 &t8:check:6:0
-op greaterThanEq &t10:check:6:0 coal:16:8 m:30:8
-op land &t11:check:6:0 &t9:check:6:0 &t10:check:6:0
-op greaterThanEq &t12:check:6:0 titanium:17:8 m:30:8
-op land &t13:check:6:0 &t11:check:6:0 &t12:check:6:0
-op greaterThanEq &t14:check:6:0 thorium:18:8 m:30:8
-op land &t15:check:6:0 &t13:check:6:0 &t14:check:6:0
-op greaterThanEq &t16:check:6:0 silicium:21:8 m:30:8
-op land &t17:check:6:0 &t15:check:6:0 &t16:check:6:0
-op greaterThanEq &t18:check:6:0 plastanium:22:8 m:30:8
-op land &t19:check:6:0 &t17:check:6:0 &t18:check:6:0
-op greaterThanEq &t20:check:6:0 phase:23:8 m:30:8
-op land &t21:check:6:0 &t19:check:6:0 &t20:check:6:0
-op greaterThanEq &t22:check:6:0 surge:25:8 m:30:8
-op land &t23:check:6:0 &t21:check:6:0 &t22:check:6:0
-op greaterThanEq &t24:check:6:0 spore:26:8 m:30:8
-op land &t25:check:6:0 &t23:check:6:0 &t24:check:6:0
-op greaterThanEq &t26:check:6:0 blast:27:8 m:30:8
-op land &t27:check:6:0 &t25:check:6:0 &t26:check:6:0
-op greaterThanEq &t28:check:6:0 pyratite:28:8 m:30:8
-op land &t29:check:6:0 &t27:check:6:0 &t28:check:6:0
-jump 62 equal &t29:check:6:0 0
-set enabled:9:8 0
-jump 111 always
-jump 65 lessThanEq copper:10:8 max:8:8
-control config unloader:6:36 @copper 0 0 0
-jump 111 always
-jump 68 lessThanEq lead:11:8 max:8:8
-control config unloader:6:36 @lead 0 0 0
-jump 111 always
-jump 71 lessThanEq glass:12:8 max:8:8
-control config unloader:6:36 @metaglass 0 0 0
-jump 111 always
-jump 74 lessThanEq graphite:13:8 max:8:8
-control config unloader:6:36 @graphite 0 0 0
-jump 111 always
-jump 77 lessThanEq sand:15:8 max:8:8
-control config unloader:6:36 @sand 0 0 0
-jump 111 always
-jump 80 lessThanEq coal:16:8 max:8:8
-control config unloader:6:36 @coal 0 0 0
-jump 111 always
-jump 83 lessThanEq titanium:17:8 max:8:8
-control config unloader:6:36 @titanium 0 0 0
-jump 111 always
-jump 86 lessThanEq thorium:18:8 max:8:8
-control config unloader:6:36 @thorium 0 0 0
-jump 111 always
-jump 89 lessThanEq scrap:20:8 max:8:8
-control config unloader:6:36 @scrap 0 0 0
-jump 111 always
-jump 92 lessThanEq silicium:21:8 max:8:8
-control config unloader:6:36 @silicon 0 0 0
-jump 111 always
-jump 95 lessThanEq plastanium:22:8 max:8:8
-control config unloader:6:36 @plastanium 0 0 0
-jump 111 always
-jump 98 lessThanEq phase:23:8 max:8:8
-control config unloader:6:36 @phase-fabric 0 0 0
-jump 111 always
-jump 101 lessThanEq surge:25:8 max:8:8
-control config unloader:6:36 @surge-alloy 0 0 0
-jump 111 always
-jump 104 lessThanEq spore:26:8 max:8:8
-control config unloader:6:36 @spore-pod 0 0 0
-jump 111 always
-jump 107 lessThanEq blast:27:8 max:8:8
-control config unloader:6:36 @blast-compound 0 0 0
-jump 111 always
-jump 110 lessThanEq pyratite:28:8 max:8:8
-control config unloader:6:36 @pyratite 0 0 0
-jump 111 always
-set enabled:9:8 0
-control enabled unloader:6:36 enabled:9:8 0 0 0
-control enabled incinerator:6:59 enabled:9:8 0 0 0
-jump 115 equal enabled:9:8 0
-wait 0.5
-control enabled unloader:6:36 0 0 0 0
-control enabled incinerator:6:59 0 0 0 0
-set &fcheck:6:0 null
-set @counter &rcheck:6:0
-
+var message;
+var link: AnyBuilding;
+for (let i = 0; i < Vars.links; i++) {
+    var link = getLink(i);
+    var ltype = link.type;
+    if (ltype == Blocks.message) {
+        message = link;
+    }
+    else {
+        print("----------", ltype, "----------\n");
+        print("config     : ", link.config, "\n");
+        print("efficiency : ", link.efficiency, "\n");
+        print("flag       : ", link.flag, "\n");
+        print("health     : ", link.health, "\n");
+        print("heat       : ", link.heat, "\n");
+        print("total items: ", link.totalItems, "\n");
+        print("item capa  : ", link.itemCapacity, "\n");
+        print("liquid capa: ", link.liquidCapacity, "\n");
+        print("power capa : ", link.powerCapacity, "\n");
+        print("pnet capa  : ", link.powerNetCapacity, "\n");
+        print("pnet in    : ", link.powerNetIn, "\n");
+        print("pnet out   : ", link.powerNetOut, "\n");
+        print("pnet stored: ", link.powerNetStored, "\n");
+        print("total power: ", link.totalPower, "\n");
+        print("progress   : ", link.progress, "\n");
+        print("size       : ", link.size, "\n");
+        print("rotation   : ", link.rotation, "\n");
+        print("x,y        : ", link.x, ",", link.y, "\n");
+    }
+}
+printFlush(message);

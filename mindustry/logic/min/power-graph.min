@@ -4,276 +4,284 @@ set factor:5:4 0
 jump 6 lessThanEq @ipt 4
 set nbars:4:4 31
 set factor:5:4 0.1
-set display:12:4 null
-set message:14:4 null
-set memory:15:4 null
-op sub i:17:9 @links 1
-jump 45 lessThan i:17:9 0
-getlink link:18:8 i:17:9
-sensor ltype:19:8 link:18:8 @type
-print ltype:19:8
+set display:14:4 null
+set message:16:4 null
+set memory:17:4 null
+op sub i:19:9 @links 1
+jump 45 lessThan i:19:9 0
+getlink link:20:8 i:19:9
+sensor ltype:21:8 link:20:8 @type
+print ltype:21:8
 print "\n"
-jump 20 notEqual ltype:19:8 @logic-display
+jump 20 notEqual ltype:21:8 @logic-display
 print "Display found\n"
-set size:13:4 80
-set display:12:4 link:18:8
+set size:15:4 80
+set display:14:4 link:20:8
 jump 43 always
-jump 25 notEqual ltype:19:8 @large-logic-display
+jump 25 notEqual ltype:21:8 @large-logic-display
 print "Disqplay found\n"
-set size:13:4 176
-set display:12:4 link:18:8
+set size:15:4 176
+set display:14:4 link:20:8
 jump 43 always
-op equal &t0 ltype:19:8 @power-node
-op equal &t1 ltype:19:8 @power-node-large
+op equal &t0 ltype:21:8 @power-node
+op equal &t1 ltype:21:8 @power-node-large
 op or &t2 &t0 &t1
 jump 32 equal &t2 0
 print "Node found\n"
-set node:11:4 link:18:8
+set node:13:4 link:20:8
 jump 43 always
-jump 37 notEqual ltype:19:8 @message
+jump 37 notEqual ltype:21:8 @message
 print display_version:3:4
 print "Message found\n"
-set message:14:4 link:18:8
+set message:16:4 link:20:8
 jump 43 always
-op equal &t3 ltype:19:8 @memory-cell
-op equal &t4 ltype:19:8 @memory-bank
+op equal &t3 ltype:21:8 @memory-cell
+op equal &t4 ltype:21:8 @memory-bank
 op or &t5 &t3 &t4
 jump 43 equal &t5 0
 print "Memory found\n"
-set memory:15:4 link:18:8
-op sub i:17:9 i:17:9 1
+set memory:17:4 link:20:8
+op sub i:19:9 i:19:9 1
 jump 10 always
-printflush message:14:4
-op div scale:49:4 size:13:4 80
-op mul font_width_base:52:4 8 scale:49:4
-op mul font_height_base:53:4 font_width_base:52:4 1.1
-set font_hspace:55:4 1
-set font_skew:56:4 0
-op mul font_stroke:57:4 2 scale:49:4
-set cur_x:59:4 0
-set cur_y:60:4 0
-op div zero:62:4 size:13:4 2
-op mul barw:63:4 10 scale:49:4
-op sub left:64:4 size:13:4 barw:63:4
-set sync:73:4 0
-set cpu_count:76:4 1
-set procs:77:4 0
-set links:102:4 @links
-set ptr:104:4 0
-set max_power:105:4 0
-set max_capacity:106:4 0
-op div ech_width:107:4 left:64:4 nbars:4:4
-jump 67 greaterThan ech_width:107:4 0
-set ech_width:107:4 1
-set i:111:9 0
-jump 72 greaterThanEq i:111:9 nbars:4:4
-write zero:62:4 memory:15:4 i:111:9
-op add i:111:9 i:111:9 1
+printflush message:16:4
+op div scale:52:4 size:15:4 80
+op mul font_width_base:55:4 8 scale:52:4
+op mul font_height_base:56:4 font_width_base:55:4 1.1
+set font_hspace:58:4 1
+set font_skew:59:4 0
+op mul font_stroke:60:4 2 scale:52:4
+set cur_x:62:4 0
+set cur_y:63:4 0
+op div zero:65:4 size:15:4 2
+op mul barw:66:4 10 scale:52:4
+op sub left:67:4 size:15:4 barw:66:4
+set sync:76:4 0
+set cpu_count:79:4 1
+set procs:80:4 0
+set links:106:4 @links
+set ptr:108:4 0
+set max_power:109:4 0
+set max_capacity:110:4 0
+op div ech_width:111:4 left:67:4 nbars:4:4
+jump 67 greaterThan ech_width:111:4 0
+set ech_width:111:4 1
+set i:115:9 0
+jump 72 greaterThanEq i:115:9 nbars:4:4
+write zero:65:4 memory:17:4 i:115:9
+op add i:115:9 i:115:9 1
 jump 68 always
-set i:113:9 nbars:4:4
+set i:117:9 nbars:4:4
 op mul &t0 2 nbars:4:4
-jump 78 greaterThanEq i:113:9 &t0
-write 0 memory:15:4 i:113:9
-op add i:113:9 i:113:9 1
+jump 78 greaterThanEq i:117:9 &t0
+write 0 memory:17:4 i:117:9
+op add i:117:9 i:117:9 1
 jump 73 always
-set power:116:4 0
-set hbars:117:4 7
-op add &t0 1 hbars:117:4
-op div dybars:118:4 size:13:4 &t0
-set ticks:123:8 @tick
-sensor capacity:125:8 node:11:4 @powerNetCapacity
-sensor stored:126:8 node:11:4 @powerNetStored
-set font_width:50:4 font_width_base:52:4
-set font_height:51:4 font_height_base:53:4
-op div &t1 font_width:50:4 4
-op add font_hspace:55:4 &t1 font_stroke:57:4
-op mul max_power:105:4 max_power:105:4 0.9999
+set power:120:4 0
+set hbars:121:4 7
+op add &t0 1 hbars:121:4
+op div dybars:122:4 size:15:4 &t0
+set ticks:127:8 @tick
+sensor capacity:129:8 node:13:4 @powerNetCapacity
+sensor stored:130:8 node:13:4 @powerNetStored
+set font_width:53:4 font_width_base:55:4
+set font_height:54:4 font_height_base:56:4
+op div &t1 font_width:53:4 4
+op add font_hspace:58:4 &t1 font_stroke:60:4
+op mul max_power:109:4 max_power:109:4 0.9999
 draw clear 0 0 0
-sensor &t2 node:11:4 @powerNetIn
-sensor &t3 node:11:4 @powerNetOut
-op sub p:134:8 &t2 &t3
-op mul &t4 power:116:4 factor:5:4
+sensor &t2 node:13:4 @powerNetIn
+sensor &t3 node:13:4 @powerNetOut
+op sub p:138:8 &t2 &t3
+op mul &t4 power:120:4 factor:5:4
 op sub &t5 1 factor:5:4
-op mul &t6 &t5 p:134:8
-op add power:116:4 &t4 &t6
-op abs apower:136:8 p:134:8
-jump 101 lessThanEq apower:136:8 max_power:105:4
-set max_power:105:4 apower:136:8
-op div &t7 power:116:4 max_power:105:4
-op mul power_dy:139:8 &t7 zero:62:4
-op add ptr2:142:8 ptr:104:4 nbars:4:4
-op add &t8 zero:62:4 power_dy:139:8
-write &t8 memory:15:4 ptr:104:4
-op mul &t9 size:13:4 stored:126:8
-op div &t10 &t9 capacity:125:8
-write &t10 memory:15:4 ptr2:142:8
-op add &t11 ptr:104:4 1
-op mod ptr:104:4 &t11 nbars:4:4
-op sub &t12 size:13:4 1
-op sub cur:147:8 &t12 barw:63:4
-set last_cur:148:8 cur:147:8
-op mod &t13 ptr:104:4 nbars:4:4
-read last_y:149:8 memory:15:4 &t13
+op mul &t6 &t5 p:138:8
+op add power:120:4 &t4 &t6
+op abs apower:140:8 p:138:8
+jump 101 lessThanEq apower:140:8 max_power:109:4
+set max_power:109:4 apower:140:8
+op div &t7 power:120:4 max_power:109:4
+op mul power_dy:143:8 &t7 zero:65:4
+op add ptr2:146:8 ptr:108:4 nbars:4:4
+op add &t8 zero:65:4 power_dy:143:8
+write &t8 memory:17:4 ptr:108:4
+op mul &t9 size:15:4 stored:130:8
+op div &t10 &t9 capacity:129:8
+write &t10 memory:17:4 ptr2:146:8
+op add &t11 ptr:108:4 1
+op mod ptr:108:4 &t11 nbars:4:4
+op sub &t12 size:15:4 1
+op sub cur:151:8 &t12 barw:66:4
+set last_cur:152:8 cur:151:8
+op mod &t13 ptr:108:4 nbars:4:4
+read last_y:153:8 memory:17:4 &t13
 draw stroke 2
-op sub &t14 0 ech_width:107:4
-op sub wcap:151:8 &t14 1
-jump 136 lessThan cur:147:8 -1
-op mod m32:153:12 ptr2:142:8 nbars:4:4
-read yy:154:12 memory:15:4 m32:153:12
-op add &t15 nbars:4:4 m32:153:12
-read cap:155:12 memory:15:4 &t15
+op sub &t14 0 ech_width:111:4
+op sub wcap:155:8 &t14 1
+jump 136 lessThan cur:151:8 -1
+op mod m32:157:12 ptr2:146:8 nbars:4:4
+read yy:158:12 memory:17:4 m32:157:12
+op add &t15 nbars:4:4 m32:157:12
+read cap:159:12 memory:17:4 &t15
 draw color 80 80 80
-draw rect cur:147:8 0 wcap:151:8 cap:155:12
-jump 129 lessThan last_y:149:8 zero:62:4
+draw rect cur:151:8 0 wcap:155:8 cap:159:12
+jump 129 lessThan last_y:153:8 zero:65:4
 draw color 0 128 0
 jump 130 always
 draw color 128 0 0
-draw line last_cur:148:8 last_y:149:8 cur:147:8 yy:154:12
-set last_cur:148:8 cur:147:8
-set last_y:149:8 yy:154:12
-op sub ptr2:142:8 ptr2:142:8 1
-op sub cur:147:8 cur:147:8 ech_width:107:4
+draw line last_cur:152:8 last_y:153:8 cur:151:8 yy:158:12
+set last_cur:152:8 cur:151:8
+set last_y:153:8 yy:158:12
+op sub ptr2:146:8 ptr2:146:8 1
+op sub cur:151:8 cur:151:8 ech_width:111:4
 jump 119 always
-op sub &t15 @tick ticks:123:8
-op floor &t16 &t15
-print "Graphs: "
-print &t16
-print "\n"
-set ticks:123:8 @tick
-jump 146 greaterThanEq power:116:4 0
-op sub num:186:8 0 power:116:4
+set ticks:127:8 @tick
+jump 141 greaterThanEq power:120:4 0
+op sub num:190:8 0 power:120:4
 draw color 255 0 0
-jump 148 always
-set num:186:8 power:116:4
+jump 143 always
+set num:190:8 power:120:4
 draw color 0 255 0
-draw rect left:64:4 zero:62:4 barw:63:4 power_dy:139:8
-jump 151 greaterThanEq power:116:4 0
+draw rect left:67:4 zero:65:4 barw:66:4 power_dy:143:8
+jump 146 greaterThanEq power:120:4 0
 draw color 255 32 32
-op add &t17 font_width:50:4 font_hspace:55:4
-op mul back:201:8 2 &t17
-op sub &t18 left:64:4 barw:63:4
-op sub cur_x:59:4 &t18 font_width:50:4
-op mul &t19 font_height:51:4 1.8
-op sub cur_y:60:4 size:13:4 &t19
-set dot:204:8 0
-jump 165 lessThanEq num:186:8 2000
-set char:342:18 75
-set &rdrawChar:342:0 162
-jump 271 always
-op idiv num:186:8 num:186:8 100
-op sub cur_x:59:4 cur_x:59:4 back:201:8
-set dot:204:8 2
-jump 168 notEqual dot:204:8 1
-set digit:212:8 46
-jump 171 always
-op mod &t20 num:186:8 10
-op add digit:212:8 &t20 48
-op idiv num:186:8 num:186:8 10
-op sub dot:204:8 dot:204:8 1
-set char:342:18 digit:212:8
-set &rdrawChar:342:0 175
-jump 271 always
-op sub cur_x:59:4 cur_x:59:4 back:201:8
-jump 165 notEqual num:186:8 0
-op sub &t20 @tick ticks:123:8
-op floor &t21 &t20
-print "Num power & bar: "
-print &t21
-print "\n"
-set ticks:123:8 @tick
+op add &t15 font_width:53:4 font_hspace:58:4
+op mul back:205:8 2 &t15
+op sub &t16 left:67:4 barw:66:4
+op sub cur_x:62:4 &t16 font_width:53:4
+op mul &t17 font_height:54:4 1.8
+op sub cur_y:63:4 size:15:4 &t17
+set dot:208:8 0
+jump 160 lessThanEq num:190:8 2000
+set char:370:18 75
+set &rdrawChar:370:0 157
+jump 279 always
+op idiv num:190:8 num:190:8 100
+op sub cur_x:62:4 cur_x:62:4 back:205:8
+set dot:208:8 2
+jump 163 notEqual dot:208:8 1
+set digit:216:8 46
+jump 166 always
+op mod &t18 num:190:8 10
+op add digit:216:8 &t18 48
+op idiv num:190:8 num:190:8 10
+op sub dot:208:8 dot:208:8 1
+set char:370:18 digit:216:8
+set &rdrawChar:370:0 170
+jump 279 always
+op sub cur_x:62:4 cur_x:62:4 back:205:8
+jump 160 notEqual num:190:8 0
+set ticks:127:8 @tick
 draw color 0 255 255
-op mul &t22 1.5 scale:49:4
-op max font_width:50:4 6 &t22
-set font_height:51:4 font_width_base:52:4
-op div &t23 font_width:50:4 4
-op add font_hspace:55:4 &t23 font_stroke:57:4
-op add &t24 font_width:50:4 font_hspace:55:4
-op mul back:201:8 2 &t24
-op sub cur_x:59:4 &t18 font_width:50:4
-op mul cur_y:60:4 5 scale:49:4
-set dot:204:8 0
-set num:186:8 stored:126:8
-draw stroke scale:49:4
-jump 204 lessThanEq num:186:8 9000000
-set char:342:18 77
-set &rdrawChar:342:0 200
-jump 271 always
-op idiv num:186:8 num:186:8 100000
-op sub cur_x:59:4 cur_x:59:4 back:201:8
-set dot:204:8 2
-jump 219 always
-jump 212 lessThanEq num:186:8 1000000
-set char:342:18 77
-set &rdrawChar:342:0 208
-jump 271 always
-op idiv num:186:8 num:186:8 10000
-op sub cur_x:59:4 cur_x:59:4 back:201:8
-set dot:204:8 3
-jump 219 always
-jump 219 lessThanEq num:186:8 2000
-set char:342:18 75
-set &rdrawChar:342:0 216
-jump 271 always
-op idiv num:186:8 num:186:8 100
-op sub cur_x:59:4 cur_x:59:4 back:201:8
-set dot:204:8 2
-jump 222 notEqual dot:204:8 1
-set digit:212:8 46
-jump 225 always
-op mod &t25 num:186:8 10
-op add digit:212:8 &t25 48
-op idiv num:186:8 num:186:8 10
-op sub dot:204:8 dot:204:8 1
-set char:342:18 digit:212:8
-set &rdrawChar:342:0 229
-jump 271 always
-op sub cur_x:59:4 cur_x:59:4 back:201:8
-jump 219 notEqual num:186:8 0
-op sub &t25 @tick ticks:123:8
-op floor &t26 &t25
-print "Num capa: "
-print &t26
-print "\n"
-set ticks:123:8 @tick
+op mul &t18 1.5 scale:52:4
+op max font_width:53:4 6 &t18
+set font_height:54:4 font_width_base:55:4
+op div &t19 font_width:53:4 4
+op add font_hspace:58:4 &t19 font_stroke:60:4
+op add &t20 font_width:53:4 font_hspace:58:4
+op mul back:205:8 2 &t20
+op sub cur_x:62:4 &t16 font_width:53:4
+op mul cur_y:63:4 5 scale:52:4
+set dot:208:8 0
+set num:190:8 stored:130:8
+draw stroke scale:52:4
+jump 194 lessThanEq num:190:8 9000000
+set char:370:18 77
+set &rdrawChar:370:0 190
+jump 279 always
+op idiv num:190:8 num:190:8 100000
+op sub cur_x:62:4 cur_x:62:4 back:205:8
+set dot:208:8 2
+jump 209 always
+jump 202 lessThanEq num:190:8 1000000
+set char:370:18 77
+set &rdrawChar:370:0 198
+jump 279 always
+op idiv num:190:8 num:190:8 10000
+op sub cur_x:62:4 cur_x:62:4 back:205:8
+set dot:208:8 3
+jump 209 always
+jump 209 lessThanEq num:190:8 2000
+set char:370:18 75
+set &rdrawChar:370:0 206
+jump 279 always
+op idiv num:190:8 num:190:8 100
+op sub cur_x:62:4 cur_x:62:4 back:205:8
+set dot:208:8 2
+jump 212 notEqual dot:208:8 1
+set digit:216:8 46
+jump 215 always
+op mod &t21 num:190:8 10
+op add digit:216:8 &t21 48
+op idiv num:190:8 num:190:8 10
+op sub dot:208:8 dot:208:8 1
+set char:370:18 digit:216:8
+set &rdrawChar:370:0 219
+jump 279 always
+op sub cur_x:62:4 cur_x:62:4 back:205:8
+jump 209 notEqual num:190:8 0
+set ticks:127:8 @tick
 draw color 255 255 255
-draw stroke scale:49:4
-set y:278:8 dybars:118:4
-jump 246 greaterThanEq y:278:8 size:13:4
-op mul &t27 5 scale:49:4
-op add &t28 left:64:4 &t27
-draw line &t28 y:278:8 size:13:4 y:278:8
-op add y:278:8 y:278:8 dybars:118:4
-jump 240 always
-draw stroke font_stroke:57:4
-op add &t27 left:64:4 2
-draw line &t27 zero:62:4 size:13:4 zero:62:4
-draw stroke scale:49:4
-draw line left:64:4 0 left:64:4 size:13:4
+draw stroke scale:52:4
+set y:282:8 dybars:122:4
+jump 231 greaterThanEq y:282:8 size:15:4
+op mul &t21 5 scale:52:4
+op add &t22 left:67:4 &t21
+draw line &t22 y:282:8 size:15:4 y:282:8
+op add y:282:8 y:282:8 dybars:122:4
+jump 225 always
+draw stroke font_stroke:60:4
+op add &t21 left:67:4 2
+draw line &t21 zero:65:4 size:15:4 zero:65:4
+draw stroke scale:52:4
+draw line left:67:4 0 left:67:4 size:15:4
 draw color 128 128 128
-op sub &t28 left:64:4 scale:49:4
-draw line 0 zero:62:4 &t28 zero:62:4
-drawflush display:12:4
-op sub &t29 @tick ticks:123:8
-op floor &t30 &t29
-print "White lines: "
-print &t30
-print "\n"
-set ticks:123:8 @tick
-printflush message:14:4
-op notEqual &t31 @links links:102:4
-read &t32 memory:15:4 62
-op and &t33 &t32 15
-op notEqual &t34 &t33 procs:77:4
-op or &t35 &t31 &t34
-jump 269 equal &t35 0
+op sub &t22 left:67:4 scale:52:4
+draw line 0 zero:65:4 &t22 zero:65:4
+set ticks:127:8 @tick
+sensor &t23 node:13:4 @powerNetStored
+sensor &t24 node:13:4 @powerNetCapacity
+op mul &t25 &t24 0.9
+jump 269 greaterThanEq &t23 &t25
+draw color 255 0 0
+op mul s:308:12 scale:52:4 1.3
+set x2:309:12 zero:65:4
+op div &t26 size:15:4 6
+op mul dx:310:14 &t26 1.3
+op sub x1:311:12 x2:309:12 dx:310:14
+op add x3:312:12 x2:309:12 dx:310:14
+set y1:313:14 x1:311:12
+set y2:314:14 x3:312:12
+op mul d:316:14 s:308:12 6
+op mul &t27 3 scale:52:4
+draw stroke &t27
+draw line x1:311:12 y1:313:14 x2:309:12 y2:314:14
+draw line x2:309:12 y2:314:14 x3:312:12 y1:313:14
+draw line x3:312:12 y1:313:14 x1:311:12 y1:313:14
+op mul &t28 s:308:12 8
+op sub &t29 y2:314:14 &t28
+op mul &t30 s:308:12 4
+op add &t31 y1:313:14 &t30
+draw line x2:309:12 &t29 x2:309:12 &t31
+draw color 0 0 0
+op add y:324:14 y1:313:14 d:316:14
+op sub &t32 x2:309:12 0.5
+op add &t33 x2:309:12 0.5
+draw line &t32 y:324:14 &t33 y:324:14
+drawflush display:14:4
+op notEqual &t26 @links links:106:4
+read &t27 memory:17:4 62
+op and &t28 &t27 15
+op notEqual &t29 &t28 procs:80:4
+op or &t30 &t26 &t29
+jump 277 equal &t30 0
 end
 jump 82 always
 end
-op div _sk2 font_skew:56:4 2
-jump draw_char_advance lessThan char:342:18 46
-jump draw_char_advance greaterThan char:342:18 77
-draw stroke font_stroke:57:4
-op sub _char char:342:18 45
+op div _sk2 font_skew:59:4 2
+jump draw_char_advance lessThan char:370:18 46
+jump draw_char_advance greaterThan char:370:18 77
+draw stroke font_stroke:60:4
+op sub _char char:370:18 45
 op add _char _char @counter
 set @counter _char
 jump drawChar_46 always
@@ -309,146 +317,146 @@ jump drawChar_75 always
 jump drawChar_76 always
 jump drawChar_77 always
 drawChar_46:
-op add _x3 cur_x:59:4 font_width:50:4
-op add _draw_char_x3 _x3 font_skew:56:4
+op add _x3 cur_x:62:4 font_width:53:4
+op add _draw_char_x3 _x3 font_skew:59:4
 op sub _draw_char_x4 _draw_char_x3 1
-draw line _draw_char_x3 cur_y:60:4 _draw_char_x4 cur_y:60:4
+draw line _draw_char_x3 cur_y:63:4 _draw_char_x4 cur_y:63:4
 jump draw_char_advance always
 drawChar_47:
 drawChar_48:
-op add _xss cur_x:59:4 font_skew:56:4
-op add _x3 cur_x:59:4 font_width:50:4
-op add _x3ss _x3 font_skew:56:4
-op add _y3 cur_y:60:4 font_height:51:4
+op add _xss cur_x:62:4 font_skew:59:4
+op add _x3 cur_x:62:4 font_width:53:4
+op add _x3ss _x3 font_skew:59:4
+op add _y3 cur_y:63:4 font_height:54:4
 draw line _xss _y3 _x3ss _y3
-draw line _x3ss _y3 _x3 cur_y:60:4
-draw line cur_x:59:4 cur_y:60:4 _x3 cur_y:60:4
-draw line cur_x:59:4 cur_y:60:4 _xss _y3
-draw line _x3ss _y3 cur_x:59:4 cur_y:60:4
+draw line _x3ss _y3 _x3 cur_y:63:4
+draw line cur_x:62:4 cur_y:63:4 _x3 cur_y:63:4
+draw line cur_x:62:4 cur_y:63:4 _xss _y3
+draw line _x3ss _y3 cur_x:62:4 cur_y:63:4
 jump draw_char_advance always
 drawChar_49:
-op div _x2 font_width:50:4 2
-op add _x2 _x2 cur_x:59:4
+op div _x2 font_width:53:4 2
+op add _x2 _x2 cur_x:62:4
 op add _x2s _x2 _sk2
-op add _x3 cur_x:59:4 font_width:50:4
-op add _x3ss _x3 font_skew:56:4
-op div _y2 font_height:51:4 2
-op add _y2 _y2 cur_y:60:4
-op add _y3 cur_y:60:4 font_height:51:4
-draw line _x3ss _y3 _x3 cur_y:60:4
+op add _x3 cur_x:62:4 font_width:53:4
+op add _x3ss _x3 font_skew:59:4
+op div _y2 font_height:54:4 2
+op add _y2 _y2 cur_y:63:4
+op add _y3 cur_y:63:4 font_height:54:4
+draw line _x3ss _y3 _x3 cur_y:63:4
 draw line _x3ss _y3 _x2s _y2
 jump draw_char_advance always
 drawChar_50:
-op add _xs cur_x:59:4 _sk2
-op add _xss cur_x:59:4 font_skew:56:4
-op add _x3 cur_x:59:4 font_width:50:4
+op add _xs cur_x:62:4 _sk2
+op add _xss cur_x:62:4 font_skew:59:4
+op add _x3 cur_x:62:4 font_width:53:4
 op add _x3s _x3 _sk2
-op add _x3ss _x3 font_skew:56:4
-op div _y2 font_height:51:4 2
-op add _y2 _y2 cur_y:60:4
-op add _y3 cur_y:60:4 font_height:51:4
+op add _x3ss _x3 font_skew:59:4
+op div _y2 font_height:54:4 2
+op add _y2 _y2 cur_y:63:4
+op add _y3 cur_y:63:4 font_height:54:4
 draw line _xss _y3 _x3ss _y3
 draw line _x3ss _y3 _x3s _y2
-draw line cur_x:59:4 cur_y:60:4 _x3 cur_y:60:4
-draw line _xs _y2 cur_x:59:4 cur_y:60:4
+draw line cur_x:62:4 cur_y:63:4 _x3 cur_y:63:4
+draw line _xs _y2 cur_x:62:4 cur_y:63:4
 draw line _xs _y2 _x3s _y2
 jump draw_char_advance always
 drawChar_51:
-op add _xss cur_x:59:4 font_skew:56:4
-op div _x2 font_width:50:4 2
-op add _x2 _x2 cur_x:59:4
+op add _xss cur_x:62:4 font_skew:59:4
+op div _x2 font_width:53:4 2
+op add _x2 _x2 cur_x:62:4
 op add _x2s _x2 _sk2
-op add _x3 cur_x:59:4 font_width:50:4
+op add _x3 cur_x:62:4 font_width:53:4
 op add _x3s _x3 _sk2
-op add _x3ss _x3 font_skew:56:4
-op div _y2 font_height:51:4 2
-op add _y2 _y2 cur_y:60:4
-op add _y3 cur_y:60:4 font_height:51:4
+op add _x3ss _x3 font_skew:59:4
+op div _y2 font_height:54:4 2
+op add _y2 _y2 cur_y:63:4
+op add _y3 cur_y:63:4 font_height:54:4
 draw line _xss _y3 _x3ss _y3
-draw line _x3ss _y3 _x3 cur_y:60:4
-draw line cur_x:59:4 cur_y:60:4 _x3 cur_y:60:4
+draw line _x3ss _y3 _x3 cur_y:63:4
+draw line cur_x:62:4 cur_y:63:4 _x3 cur_y:63:4
 draw line _x2s _y2 _x3s _y2
 jump draw_char_advance always
 drawChar_52:
-op add _xs cur_x:59:4 _sk2
-op add _xss cur_x:59:4 font_skew:56:4
-op add _x3 cur_x:59:4 font_width:50:4
+op add _xs cur_x:62:4 _sk2
+op add _xss cur_x:62:4 font_skew:59:4
+op add _x3 cur_x:62:4 font_width:53:4
 op add _x3s _x3 _sk2
-op add _x3ss _x3 font_skew:56:4
-op div _y2 font_height:51:4 2
-op add _y2 _y2 cur_y:60:4
-op add _y3 cur_y:60:4 font_height:51:4
-draw line _x3ss _y3 _x3 cur_y:60:4
+op add _x3ss _x3 font_skew:59:4
+op div _y2 font_height:54:4 2
+op add _y2 _y2 cur_y:63:4
+op add _y3 cur_y:63:4 font_height:54:4
+draw line _x3ss _y3 _x3 cur_y:63:4
 draw line _xss _y3 _xs _y2
 draw line _xs _y2 _x3s _y2
 jump draw_char_advance always
 drawChar_53:
-op add _xs cur_x:59:4 _sk2
-op add _xss cur_x:59:4 font_skew:56:4
-op div _x2 font_width:50:4 2
-op add _x2 _x2 cur_x:59:4
+op add _xs cur_x:62:4 _sk2
+op add _xss cur_x:62:4 font_skew:59:4
+op div _x2 font_width:53:4 2
+op add _x2 _x2 cur_x:62:4
 op add _x2s _x2 _sk2
-op add _x3 cur_x:59:4 font_width:50:4
-op add _x3ss _x3 font_skew:56:4
-op div _y2 font_height:51:4 2
-op add _y2 _y2 cur_y:60:4
-op add _y3 cur_y:60:4 font_height:51:4
+op add _x3 cur_x:62:4 font_width:53:4
+op add _x3ss _x3 font_skew:59:4
+op div _y2 font_height:54:4 2
+op add _y2 _y2 cur_y:63:4
+op add _y3 cur_y:63:4 font_height:54:4
 draw line _xss _y3 _x3ss _y3
-draw line cur_x:59:4 cur_y:60:4 _x3 cur_y:60:4
+draw line cur_x:62:4 cur_y:63:4 _x3 cur_y:63:4
 draw line _xss _y3 _xs _y2
 draw line _xs _y2 _x2s _y2
-draw line _x2s _y2 _x3 cur_y:60:4
+draw line _x2s _y2 _x3 cur_y:63:4
 jump draw_char_advance always
 drawChar_54:
-op add _xs cur_x:59:4 _sk2
-op add _xss cur_x:59:4 font_skew:56:4
-op add _x3 cur_x:59:4 font_width:50:4
+op add _xs cur_x:62:4 _sk2
+op add _xss cur_x:62:4 font_skew:59:4
+op add _x3 cur_x:62:4 font_width:53:4
 op add _x3s _x3 _sk2
-op add _x3ss _x3 font_skew:56:4
-op div _y2 font_height:51:4 2
-op add _y2 _y2 cur_y:60:4
-op add _y3 cur_y:60:4 font_height:51:4
+op add _x3ss _x3 font_skew:59:4
+op div _y2 font_height:54:4 2
+op add _y2 _y2 cur_y:63:4
+op add _y3 cur_y:63:4 font_height:54:4
 draw line _xss _y3 _x3ss _y3
-draw line _x3s _y2 _x3 cur_y:60:4
-draw line cur_x:59:4 cur_y:60:4 _x3 cur_y:60:4
-draw line cur_x:59:4 cur_y:60:4 _xss _y3
+draw line _x3s _y2 _x3 cur_y:63:4
+draw line cur_x:62:4 cur_y:63:4 _x3 cur_y:63:4
+draw line cur_x:62:4 cur_y:63:4 _xss _y3
 draw line _xs _y2 _x3s _y2
 jump draw_char_advance always
 drawChar_55:
-op add _xss cur_x:59:4 font_skew:56:4
-op add _x3 cur_x:59:4 font_width:50:4
-op add _x3ss _x3 font_skew:56:4
-op add _y3 cur_y:60:4 font_height:51:4
+op add _xss cur_x:62:4 font_skew:59:4
+op add _x3 cur_x:62:4 font_width:53:4
+op add _x3ss _x3 font_skew:59:4
+op add _y3 cur_y:63:4 font_height:54:4
 draw line _xss _y3 _x3ss _y3
-draw line _x3ss _y3 _x3 cur_y:60:4
+draw line _x3ss _y3 _x3 cur_y:63:4
 jump draw_char_advance always
 drawChar_56:
-op add _xs cur_x:59:4 _sk2
-op add _xss cur_x:59:4 font_skew:56:4
-op add _x3 cur_x:59:4 font_width:50:4
+op add _xs cur_x:62:4 _sk2
+op add _xss cur_x:62:4 font_skew:59:4
+op add _x3 cur_x:62:4 font_width:53:4
 op add _x3s _x3 _sk2
-op add _x3ss _x3 font_skew:56:4
-op div _y2 font_height:51:4 2
-op add _y2 _y2 cur_y:60:4
-op add _y3 cur_y:60:4 font_height:51:4
+op add _x3ss _x3 font_skew:59:4
+op div _y2 font_height:54:4 2
+op add _y2 _y2 cur_y:63:4
+op add _y3 cur_y:63:4 font_height:54:4
 draw line _xss _y3 _x3ss _y3
-draw line _x3ss _y3 _x3 cur_y:60:4
-draw line cur_x:59:4 cur_y:60:4 _x3 cur_y:60:4
-draw line cur_x:59:4 cur_y:60:4 _xss _y3
+draw line _x3ss _y3 _x3 cur_y:63:4
+draw line cur_x:62:4 cur_y:63:4 _x3 cur_y:63:4
+draw line cur_x:62:4 cur_y:63:4 _xss _y3
 draw line _xs _y2 _x3s _y2
 jump draw_char_advance always
 drawChar_57:
-op add _xs cur_x:59:4 _sk2
-op add _xss cur_x:59:4 font_skew:56:4
-op add _x3 cur_x:59:4 font_width:50:4
+op add _xs cur_x:62:4 _sk2
+op add _xss cur_x:62:4 font_skew:59:4
+op add _x3 cur_x:62:4 font_width:53:4
 op add _x3s _x3 _sk2
-op add _x3ss _x3 font_skew:56:4
-op div _y2 font_height:51:4 2
-op add _y2 _y2 cur_y:60:4
-op add _y3 cur_y:60:4 font_height:51:4
+op add _x3ss _x3 font_skew:59:4
+op div _y2 font_height:54:4 2
+op add _y2 _y2 cur_y:63:4
+op add _y3 cur_y:63:4 font_height:54:4
 draw line _xss _y3 _x3ss _y3
-draw line _x3ss _y3 _x3 cur_y:60:4
-draw line cur_x:59:4 cur_y:60:4 _x3 cur_y:60:4
+draw line _x3ss _y3 _x3 cur_y:63:4
+draw line cur_x:62:4 cur_y:63:4 _x3 cur_y:63:4
 draw line _xss _y3 _xs _y2
 draw line _xs _y2 _x3s _y2
 jump draw_char_advance always
@@ -470,41 +478,41 @@ drawChar_72:
 drawChar_73:
 drawChar_74:
 drawChar_75:
-op add _xs cur_x:59:4 _sk2
-op add _xss cur_x:59:4 font_skew:56:4
-op div _x2 font_width:50:4 2
-op add _x2 _x2 cur_x:59:4
+op add _xs cur_x:62:4 _sk2
+op add _xss cur_x:62:4 font_skew:59:4
+op div _x2 font_width:53:4 2
+op add _x2 _x2 cur_x:62:4
 op add _x2s _x2 _sk2
-op add _x3 cur_x:59:4 font_width:50:4
-op add _x3ss _x3 font_skew:56:4
-op div _y2 font_height:51:4 2
-op add _y2 _y2 cur_y:60:4
-op add _y3 cur_y:60:4 font_height:51:4
-draw line cur_x:59:4 cur_y:60:4 _xss _y3
+op add _x3 cur_x:62:4 font_width:53:4
+op add _x3ss _x3 font_skew:59:4
+op div _y2 font_height:54:4 2
+op add _y2 _y2 cur_y:63:4
+op add _y3 cur_y:63:4 font_height:54:4
+draw line cur_x:62:4 cur_y:63:4 _xss _y3
 draw line _xs _y2 _x2s _y2
 draw line _x3ss _y3 _x2s _y2
-draw line _x2s _y2 _x3 cur_y:60:4
+draw line _x2s _y2 _x3 cur_y:63:4
 jump draw_char_advance always
 drawChar_76:
 drawChar_77:
-op add _xss cur_x:59:4 font_skew:56:4
-op div _x2 font_width:50:4 2
-op add _x2 _x2 cur_x:59:4
+op add _xss cur_x:62:4 font_skew:59:4
+op div _x2 font_width:53:4 2
+op add _x2 _x2 cur_x:62:4
 op add _x2s _x2 _sk2
-op add _x3 cur_x:59:4 font_width:50:4
-op add _x3ss _x3 font_skew:56:4
-op div _y2 font_height:51:4 2
-op add _y2 _y2 cur_y:60:4
-op add _y3 cur_y:60:4 font_height:51:4
-draw line _x3ss _y3 _x3 cur_y:60:4
-draw line cur_x:59:4 cur_y:60:4 _xss _y3
+op add _x3 cur_x:62:4 font_width:53:4
+op add _x3ss _x3 font_skew:59:4
+op div _y2 font_height:54:4 2
+op add _y2 _y2 cur_y:63:4
+op add _y3 cur_y:63:4 font_height:54:4
+draw line _x3ss _y3 _x3 cur_y:63:4
+draw line cur_x:62:4 cur_y:63:4 _xss _y3
 draw line _xss _y3 _x2s _y2
 draw line _x3ss _y3 _x2s _y2
 jump draw_char_advance always
 draw_char_advance:
-op add cur_x:59:4 cur_x:59:4 font_hspace:55:4
-op add cur_x:59:4 cur_x:59:4 font_width:50:4
+op add cur_x:62:4 cur_x:62:4 font_hspace:58:4
+op add cur_x:62:4 cur_x:62:4 font_width:53:4
 draw_char_end:
-set &fdrawChar:342:0 null
-set @counter &rdrawChar:342:0
+set &fdrawChar:370:0 null
+set @counter &rdrawChar:370:0
 
