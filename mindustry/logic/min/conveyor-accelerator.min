@@ -1,14 +1,15 @@
 set conveyor conveyor1
 set switched projector1
 set message message1
-set threshold 8
+set threshold 9
 set invert 1
 set amortization 0.98
 set f amortization
 op sub fi 1 f
-set avg 0
+set avg 1
 set links @links
 sensor items conveyor @totalItems
+jump 0 notEqual links @links
 print items
 print " / "
 op mul avg avg f
@@ -19,10 +20,10 @@ op floor favg favg items
 op div favg favg 10
 print favg
 printflush message
-jump 24 strictEqual invert true
+jump 25 strictEqual invert true
 op lessThan enabled avg threshold
-jump 25 always invert true
+jump 26 always invert true
 op greaterThanEq enabled avg threshold
 control enabled switched enabled 0 0 0
-jump 10 equal links @links
+jump 10 always x false
 

@@ -1,10 +1,10 @@
-const version: String = "hyper-controller-20240330-5";
+const version: String = "Controller-20240411-1";
 var v = version;    // First line of asm
 const display_version = "[violet]" + version + "[white]";
 var min_power = 0;
 var message;
 var keep_coal = 6500;
-var keep_copper = 6500;
+var keep_copper = 8000;
 var keep_graphite = 6500;
 var keep_lead = 8000;
 var keep_sand = 6500;
@@ -23,6 +23,8 @@ var min_cryo = 25;
 
 // When the memory has been filled
 function onUpdate() {
+    var enabled = (surge < core_max_rsrc);
+    asm`control enabled smelter1 ${enabled} 0 0`;
 }
 
 const violet = "[violet]";
@@ -59,6 +61,7 @@ var impact_next_change = Vars.second;   // Next time to change state of impact r
 // will never go below keep_{rsrc}
 var launch_item = undefined;
 var sender: Boolean;   // True if we find a unloader (normally connected to launchPad)
+var launch_config: AnyBuilding;
 
 var standalone_disass_tho_cryo;
 var need_disass;
@@ -70,12 +73,16 @@ var power_max = 0;  // max power ever seen
 var id = undefined;
 var time = undefined;   // Last time we received something
 
-var avg_ticks = 37;
+var avg_ticks = 400/Vars.ipt;
 var last_tick = Vars.tick - avg_ticks;
+
+var high_pwr = 0; // Try to detect high power devices
+var tmp_high = 0;
 
 const Filter = 0.9;
 var links = Vars.links;
 while (links == Vars.links) {
+    tmp_high = 0;
     loop++;
     var ticks = Vars.tick - last_tick;
     last_tick = Vars.tick;
@@ -104,7 +111,9 @@ while (links == Vars.links) {
         surge = sensor(Items.surgeAlloy, core);
         blast = sensor(Items.blastCompound, core);
         spore = sensor(Items.sporePod, core);
-
+    }
+    if (id != 0 || core !== undefined)
+    {
         enough_copper = copper > keep_copper;
         enough_lead = lead > keep_lead;
         enough_coal = coal > keep_coal;
@@ -235,26 +244,21 @@ while (links == Vars.links) {
         else if (ltype == Blocks.steamGenerator
             || ltype == Blocks.combustionGenerator // 60 
             || ltype == Blocks.differentialGenerator) {
-            var plink = powSteam;
-            enabled = link.enabled;
-            if (ltype == Blocks.combustionGenerator)
-                plink = powCombustion;
-            else if (ltype == Blocks.differentialGenerator)
-                plink = powDifferential;
-            if (power_left < -50) {
-                enabled = true;
-                if (link.enabled == false)
-                    power_left += plink;
-            }
-            else {
-                if (power >= plink && link.enabled) {
-                    enabled = false;
-                    power_left -= plink;
-                    enabled = false;
+            var power = link.powerNetIn - link.powerNetOut;
+            var enabled: Boolean = true;
+            if (pow_node) {
+                if (pow_node.powerNetCapacity) {
+                    enabled = pow_node.powerNetStored < pow_node.powerNetCapacity - 5000;
+                    if (link.enabled)
+                        enabled = pow_node.powerNetStored < pow_node.powerNetCapacity;
                 }
+                else
+                    enabled = power < 0;
             }
+            else
+                enabled = power < 50;
             asm`control enabled ${link} ${enabled} 0 0`;
-            // print("Power ", power_left, "/", power, ", link ", plink, " en=", enabled, "\n");
+            // print("Power ", Math.floor(power), "/", Math.floor(pow_node.powerNetCapacity - pow_node.powerNetStored), "\n");
         }
         else if (ltype == Blocks.coalCentrifuge) {
             enabled = coal != core_max_rsrc;
@@ -271,12 +275,15 @@ while (links == Vars.links) {
         }
         else if (ltype == Blocks.coreShard) {
             core = link;
+            core_max_rsrc = core.itemCapacity;
         }
         else if (ltype == Blocks.coreFoundation) {
             core = link;
+            core_max_rsrc = core.itemCapacity;
         }
         else if (ltype == Blocks.coreNucleus) {
             core = link;
+            core_max_rsrc = core.itemCapacity;
         }
         else if (ltype == Blocks.graphitePress || ltype == Blocks.multiPress) {
             if (graphite == core_max_rsrc)
@@ -327,7 +334,7 @@ while (links == Vars.links) {
                         dump = true;
                     }
                     else if (time < memory[4]) {
-                        print("Retrieving data from cell #", cell_id,"\n");
+                        print("Retrieving from cell #", cell_id,"\n");
                         core_max_rsrc = memory[2];
                         link_low_rsrc = memory[3];
                         time = memory[4];
@@ -456,6 +463,13 @@ while (links == Vars.links) {
             else
                 asm`control enabled ${link} false 0 0`;
         }
+        else if (ltype == Blocks.invertedSorter)
+        {
+            if (launch_config !== undefined && launch_config.config != link.config)
+                print(error + "Conflicting inverted sorter.\n" + white);
+                
+            launch_config = link;
+        }
         else if (link.maxHealth > 2000) {
             unhandled = true;
             // Try to avoid power big failure by deactivating
@@ -465,9 +479,10 @@ while (links == Vars.links) {
             if (ammo == undefined)
                 unhandled = true;
             else {
+                tmp_high++;
                 unhandled = false;
-                if (link.powerNetStored < 60000) {
-                    print("[red]Avoiding loose of power for ", ltype, " pstored=", link.powerNetStored, "[white]\n");
+                if (link.powerNetStored < 10000 * high_pwr) {
+                    print("[red]Avoiding loose of power for ", ltype, " pstored=", link.powerNetStored, " count=", high_pwr, "[white]\n");
                     enabled = false;
                 }
             }
@@ -481,29 +496,39 @@ while (links == Vars.links) {
     if (sender) {
         launch_item = undefined;
         var count = 0;
-        if (count < blast && enough_blast) { launch_item = Items.blastCompound; count = blast; }
-        if (count < phase && enough_phase) { launch_item = Items.phaseFabric; count = phase; }
-        if (count < surge && enough_surge) { launch_item = Items.surgeAlloy; count = surge; }
-        if (count < tho && enough_tho) { launch_item = Items.thorium; count = tho; }
-        if (count < tit && enough_tit) { launch_item = Items.titanium; count = tit; }
-        if (count < spore && enough_spore) { launch_item = Items.sporePod; count = spore; }
-        if (count < plast && enough_plast) { launch_item = Items.plastanium; count = plast; }
-        if (count < pyr && enough_pyr) { launch_item = Items.pyratite; count = pyr; }
-        if (count < sil && enough_sil) { launch_item = Items.silicon; count = sil; }
-        if (count < scrap && enough_scrap) { launch_item = Items.scrap; count = scrap; }
-        if (count < glass && enough_glass) { launch_item = Items.metaglass; count = glass; }
-        if (count < lead && enough_lead) { launch_item = Items.lead; count = lead; }
-        if (count < graphite && enough_graphite) { launch_item = Items.graphite; count = graphite; }
-        if (count < coal && enough_coal) { launch_item = Items.coal; count = coal; }
-        if (count < sand && enough_sand) { launch_item = Items.sand; count = sand; }
-        if (count < copper && enough_copper) { launch_item = Items.copper; count = copper; }
-        if (count) {
-            print(color_send + "Sending ", launch_item, ":", count, "\n" + white);
+        if (launch_config && launch_config.config != undefined) {
+            launch_item = launch_config.config;
+        }
+        else if (core) {
+            if (count < blast && enough_blast) { launch_item = Items.blastCompound; count = blast; }
+            if (count < phase && enough_phase) { launch_item = Items.phaseFabric; count = phase; }
+            if (count < surge && enough_surge) { launch_item = Items.surgeAlloy; count = surge; }
+            if (count < tho && enough_tho) { launch_item = Items.thorium; count = tho; }
+            if (count < tit && enough_tit) { launch_item = Items.titanium; count = tit; }
+            if (count < spore && enough_spore) { launch_item = Items.sporePod; count = spore; }
+            if (count < plast && enough_plast) { launch_item = Items.plastanium; count = plast; }
+            if (count < pyr && enough_pyr) { launch_item = Items.pyratite; count = pyr; }
+            if (count < sil && enough_sil) { launch_item = Items.silicon; count = sil; }
+            if (count < scrap && enough_scrap) { launch_item = Items.scrap; count = scrap; }
+            if (count < glass && enough_glass) { launch_item = Items.metaglass; count = glass; }
+            if (count < lead && enough_lead) { launch_item = Items.lead; count = lead; }
+            if (count < graphite && enough_graphite) { launch_item = Items.graphite; count = graphite; }
+            if (count < coal && enough_coal) { launch_item = Items.coal; count = coal; }
+            if (count < sand && enough_sand) { launch_item = Items.sand; count = sand; }
+            if (count < copper && enough_copper) { launch_item = Items.copper; count = copper; }
+        }
+        else
+            print("[red]Connect a core[white]\n");
+        print(launch_item);
+        if (launch_item) {
+            asm`sensor ${count} ${core} ${launch_item}`
+            print(color_send + "Sending ", launch_item, " ", count, "\n" + white);
         }
         else {
             print(color_send + "Unloader stopped\n" + white);
         }
-    }
+    } // end for
+    high_pwr = tmp_high;
 
     if (pow_node) {
         pow_capacity = pow_node.powerNetCapacity;
@@ -524,8 +549,7 @@ while (links == Vars.links) {
         power = 0;
     }
 
-    if (core) {
-        core_max_rsrc = core.itemCapacity;
+    if (core_max_rsrc && message) {
         link_low_rsrc = Math.floor(core_max_rsrc * 0.97);
         need_disass = enough_scrap &&
             ((tho != core_max_rsrc) || (tit != core_max_rsrc) || (graphite != core_max_rsrc) || (sand != core_max_rsrc));
@@ -585,18 +609,18 @@ while (links == Vars.links) {
             print(need_color + "Need plastanium\n" + white);
             mass_enabled = false;
         }
-    } else 
-    {
-        if (pow_node.powerNetCapacity) {
-            if (pow_node.powerNetStored > 600)
-                mass_enabled = true;
-            else if (pow_node.powerNetStored < 10)
-                mass_enabled = false;
+        if (!enough_phase) {
+            print(need_color + "Need phase fabric\n" + white);
         }
-        else
-            mass_enabled = true;
     }
-    pow_node = undefined;
+    if (pow_node.powerNetCapacity) {
+        if (pow_node.powerNetStored > 600)
+            mass_enabled = true;
+        else if (pow_node.powerNetStored < 10)
+            mass_enabled = false;
+    }
+    else
+        mass_enabled = true;
 
     printFlush(message);
 }
