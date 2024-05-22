@@ -1,0 +1,28 @@
+jump 0 equal display1 null
+draw clear 0 0 0 0 0 0
+sensor switch switch1 @enabled
+sensor disX display1 @x
+sensor disY display1 @y
+sensor size display1 @size
+op div sizeadj size 2
+op sub sizeadj sizeadj .25
+op sub disX disX sizeadj
+op sub disY disY sizeadj
+radar ally player any distance @this 0 user
+sensor sw switch1 @enabled
+jump 1 notEqual sw switch
+sensor cursorX user @shootX
+sensor cursorY user @shootY
+op sub pixelX cursorX disX
+op sub pixelY cursorY disY
+jump 10 lessThan pixelX 0
+jump 10 greaterThan pixelX size
+jump 10 lessThan pixelY 0
+jump 10 greaterThan pixelY size
+op mul pixelX pixelX 32
+op mul pixelY pixelY 32
+draw color 255 255 255 255 0 0
+draw poly pixelX pixelY 20 1 0 0
+drawflush display1
+jump 10 always 0 0
+
