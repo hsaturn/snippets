@@ -2,8 +2,21 @@
    - Transmit via memory cells resources contained in the core (from hyper controller).
    - Enable or disable factories if there is enough
    */
-const version: String = "hyper-link 20240328-2";
+const version: String = "hyper-link 20240522-2";
 var v = version; // 1st line of asm
+
+function onHandle(link: AnyBuilding) {
+    var ltype = link.type;
+    if (ltype == Blocks.waterExtractor) {
+        var enabled = coal < core_max_rsrc;
+        asm`control enabled extractor1 ${enabled} 0 0`;
+        asm`control enabled extractor2 ${enabled} 0 0`;
+        return true;
+    }
+}
+
+function onUpdate() {
+}
 
 const display_version = "[violet]" + version + "[white]";
 var link : AnyBuilding;
@@ -15,7 +28,7 @@ var id : number; // link id
 var message : AnyBuilding;
 var enable_all = false; // NYI
 var min_power;
-var time;
+var time; // Age of data as sent from
 var dummy: AnyBuilding;
 const copy = new Memory(dummy, 64);
 var srce_block: AnyBuilding = undefined;
@@ -26,6 +39,7 @@ var heap = 0;
 const violet = "[violet]";
 const yellow = "[yellow]";
 const cyan = "[cyan]";
+const green = "[green]";
 const need_color: String = cyan;
 const color_send: String = "[blue]";
 const error = "[red]";
@@ -37,7 +51,7 @@ var user_ptr = 0;   // ptr in cell to user space zone
 var user_size = 5;  // Size of allocated memory
 var cpu_id = Math.floor(Math.rand(100000)) * 100;
 var loop = 0;
-const GarbageCollect: Boolean = true;
+const GarbageCollect: Boolean = false;
 const GarbageTimeout: Number = 10*1000;  // GC after x sec
 var gc = 0; // When != 0, garbage collect gc
 
@@ -81,8 +95,10 @@ function malloc(size: number)
     while (idx + size < srce_size)
     {
         var byte = mem[idx];
-        if (byte == cpu_id_size)
+        var tmsg = mem[idx+1]
+        if (tmsg == 0)
         {
+            mem[idx] = cpu_id_size;
             mem[idx + 1] = time;
             return idx + 2;
         }
@@ -134,11 +150,16 @@ function malloc(size: number)
 
 var avg_ticks = 37;
 var last_tick = Vars.tick - avg_ticks;
+var check_item = undefined;
+var last_check;
+var allow_dump: Boolean = false;
+var last_update = 0;    // Last time we read a cell
 
 const Filter = 0.9;
+var check_total_buildings = 0;
 
 while (true) {
-    wait(1);
+    last_check = undefined;
     print(display_version, " #", id, "\n");
     var ticks = Vars.tick - last_tick;
     last_tick = Vars.tick;
@@ -146,9 +167,14 @@ while (true) {
 
     var latency = avg_ticks / 60;
     latency = Math.floor(latency * 1000) / 1000;
-    print("cpu #", cpu_id, " loop ", loop, " lat.", latency, "\n");
+    print("cpu #", cpu_id, " loop ", loop, " (", latency, "s)\n");
+    // Count number of 'guess resource' buildings
+    // if exactly one, then keep check_item for next loop
+    var check_buildings = 0;
+    var retrieved = false;
     for (let i = Vars.links - 1; i >= 0; i--) {
         var check = undefined;
+        var is_conveyor = false;
         if (id == undefined)
             enable_all = true;
         var link = getLink(i);
@@ -160,63 +186,74 @@ while (true) {
             core = link;
         }
         else if (ltype == Blocks.memoryCell || ltype == Blocks.memoryBank) {
-                var dump: Boolean = false;
-                const memory = new Memory(link, 64);
+            var dump : Boolean = 0;
+            const memory = new Memory(link, 64);
             if (core) {
                 print("Dumping to memory\n");
                 id = 0;
                 dump = true;
-                memory[4] = Math.floor(Vars.time);
             }
             else if (memory[0] == 65) {
                 var cell_id = memory[1];
                 var next_id = cell_id + 1;
-                var last_update = Math.floor(Vars.time - memory[4]);
-                print("Last update: ", last_update, ", id=", id, ", next=", next_id, "\n");
-                if (id === undefined || id > next_id)
+ 
+                // print("Last update: ", last_update, ", id=", id, ", next=", next_id, "\n");
+                if (id === undefined || id > next_id) {
                     id = next_id;
-                if (last_update > 10000) {
-                    print(warning + "Resync, id=", id, white + "\n");
+                    allow_dump = false;
+                    print("[red]Changing ID to ", id, "[white]\n");
+                }
+                if (memory[8] - last_update > 10000) {
+                    print(warning + "Resync, id was", id, white + "\n");
                     memory[0] = 0;  // data too old, trying to reconnect
                     memory[1] = 0;  // main controller
+                    memory[7] = cpu_id;
+                    last_update = Vars.time; // prevent loop of resync
                     id = undefined;
+                    allow_dump = false;
                 }
                 if (id != undefined) {
                     if (id <= cell_id) {
-                        print(cyan + "Transmitting data to cell #", cell_id, ", id=", id, "\n" + white);
-                        memory[4] = time;
-                        memory[4] = Math.floor(Vars.time);
                         dump = true;
                     }
-                    else if (time < memory[4]) {
-                        print("Retrieving data from cell #", cell_id, ", id=", id, "\n");
+                    else if (memory[4] > time) {
+                        retrieved = true;
+                        print("Retrieving data from cell_", cell_id, ", id=", id, "\n");
                         core_max_rsrc = memory[2];
                         link_low_rsrc = memory[3];
                         time = memory[4];
                         min_power = memory[5];
                         heap = memory[6];
+                        last_update = memory[8];
+
                         copper = memory[10];
                         coal = memory[11];
                         lead = memory[12];
                         sand = memory[13];
+
                         glass = memory[14];
                         pyr = memory[15];
                         tit = memory[16];
                         tho = memory[17];
+
                         sil = memory[18];
                         scrap = memory[19];
                         graphite = memory[20];
                         plast = memory[21];
+
                         phase = memory[22];
                         surge = memory[23];
                         blast = memory[24];
                         spore = memory[25];
+
+                        srce_block = link;
+                        onUpdate();
+
                         if (ltype == Blocks.memoryBank)
                             srce_size = 512;
                         else
                             srce_size = 64;
 
-                        srce_block = link;
                     }
                     else
                         print("\n");
@@ -225,17 +262,20 @@ while (true) {
             else if (id !== undefined) {
                 // Allocate this memory cell to this processor.
                 // print("Allocating memory #", id, "\n");
-                memory[4] = Math.floor(Vars.time);
                 dump = true;
             }
-            if (dump) {
-                print("Setting id ", id, "\n");
-                memory[0] = 65; // controller
+            if (id && dump && allow_dump && time > memory[4]) {
+                print(cyan + "Transmitting data to cell_", memory[1], ", id=", id, white + "\n");
+                memory[0] = 65; // validate memory
                 memory[1] = id;
                 memory[2] = core_max_rsrc;
                 memory[3] = link_low_rsrc;
+                memory[4] = time;
                 memory[5] = min_power;
                 memory[6] = heap;
+                memory[7] = cpu_id;
+                memory[8] = Vars.time;
+
                 memory[10] = copper;
                 memory[11] = coal;
                 memory[12] = lead;
@@ -254,8 +294,10 @@ while (true) {
                 memory[25] = spore;
 
                 // Copying from outside (id>) to inside values (<id)
-                if (srce_block != undefined) {
+                if (heap && srce_block != undefined) {
                     const srce_mem = new Memory(srce_block);
+                    var burn: Boolean = srce_mem[1] < id;
+                    var destidx = heap;
                     var idx = heap;
                     var byte = memory[idx];
                     // byte == 0 is the end of memory allocated.
@@ -263,12 +305,23 @@ while (true) {
                     // so, stop to forward from this point
                     while (byte % 100) {
                         var count = byte % 100;
-                        if (count == 1) break;
-                        var from = byte - count;
-                        print(yellow + "  Forwarding ", count, " bytes from ", from, " ", idx, "\n");
-                        while (count--) {
-                            srce_mem[idx] = memory[idx];
-                            idx++;
+                        if (GarbageCollect && (count == 1)) break;
+                        if (memory[idx + 1] == 0) {
+                            idx += count;   // Skip old message
+                            print(green + "skipping msg ", idx, white + "\n");
+                        }
+                        else {
+                            if (burn) {
+                                memory[idx + 1] = 0;
+                                print(green + "burning msg ", idx, white + "\n");
+                            }
+
+                            var from = byte - count;
+                            print(green + "fwd msg ", idx, white + "\n");
+                            while (count--) {
+                                srce_mem[idx] = memory[idx];
+                                idx++;
+                            }
                         }
                         byte = memory[idx];
                         idx++;
@@ -276,36 +329,92 @@ while (true) {
                 }
             }
         }
-        else if (ltype == Blocks.laserDrill || ltype == Blocks.pneumaticDrill) {
-            if (link.copper) check = copper;
-            else if (link.scrap) check = scrap;
-            else if (link.sand) check = sand;
-            else if (link.lead) check = lead;
-            else if (link.titanium) check = tit;
-            else if (link.coal) check = coal;
-            else if (link.thorium) check = tho;
-            print("Found ? ", check, "\n");
+        else if (ltype == Blocks.laserDrill
+            || ltype == Blocks.pneumaticDrill
+            || ltype == Blocks.impactDrill
+            || ltype == Blocks.blastDrill
+            || ltype == Blocks.conveyor
+            || ltype == Blocks.titaniumConveyor
+            || ltype == Blocks.plastaniumConveyor
+            || ltype == Blocks.armoredConveyor) {
+            if (check_total_buildings > 1) check_item = undefined;
+
+            var count = 5;
+            while (count > 0) {
+                if (link.copper) check_item = Items.copper;
+                else if (link.scrap) check_item = Items.scrap;
+                else if (link.graphite) check_item = Items.graphite;
+                else if (link.sand) check_item = Items.sand;
+                else if (link.lead) check_item = Items.lead;
+                else if (link.silicon) check_item = Items.silicon;
+                else if (link.titanium) check_item = Items.titanium;
+                else if (link.coal) check_item = Items.coal;
+                else if (link.thorium) check_item = Items.thorium;
+                else if (link.sporePod) check_item = Items.sporePod;
+                else if (link.pyratite) check_item = Items.pyratite;
+                else if (link.plastanium) check_item = Items.plastanium;
+                else if (link.surgeAlloy) check_item = Items.surgeAlloy;
+                count = count - 1;
+                if (check_item !== undefined) break;
+            }
+            if (check_item == Items.copper) check = copper;
+            else if (check_item == Items.scrap) check = scrap;
+            else if (check_item == Items.graphite) check = graphite;
+            else if (check_item == Items.sand) check = sand;
+            else if (check_item == Items.lead) check = lead;
+            else if (check_item == Items.titanium) check = tit;
+            else if (check_item == Items.coal) check = coal;
+            else if (check_item == Items.thorium) check = tho;
+            else if (check_item == Items.pyratite) check = pyr;
+            else if (check_item == Items.sporePod) check = spore;
+            else if (check_item == Items.silicon) check = sil;
+            else if (check_item == Items.plastanium) check = plast;
+            else if (check_item == Items.surgeAlloy) check = surge;
+            else
+                print("Cannot find item\n");
+            if (check_item === undefined)
+                asm`control enabled ${link} true 0 0`;
+            check_buildings++;
+            is_conveyor = true;
         }
+        else if (ltype == Blocks.pulverizer)
+            check = sand;
+        else if (ltype == Blocks.kiln)
+            check = glass;
         else if (ltype == Blocks.multiPress || ltype == Blocks.graphitePress)
             check = graphite;
         else if (ltype == Blocks.massDriver) {
             var enabled = link.totalItems > 50;
             asm`control enabled ${link} ${enabled} 0 0`;
         }
-        else if (ltype == Blocks.pulverizer) {
-            if (sand < scrap)
-                check = sand;
+        else if (ltype == Blocks.cultivator) {
+            check = Math.min(
+                Math.min(spore, pyr),
+                blast
+            );
         }
+        else if (ltype == Blocks.pyratiteMixer)
+            check = Math.min(pyr,blast);
         else if (ltype == Blocks.plastaniumCompressor) {
             check = plast;
         }
-        else if (ltype == Blocks.disassembler)
-        {
+        else if (ltype == Blocks.disassembler) {
             check = Math.min(
                 Math.min(sand, tit),
                 Math.min(graphite, tho),
             );
         }
+        else if (ltype == Blocks.separator)
+        {
+            check = Math.min(
+                Math.min(copper, lead),
+                Math.min(graphite, tit)
+            );
+        }
+        else if (ltype == Blocks.blastMixer)
+            check = blast;
+        else if (ltype == Blocks.sporePress)
+            check = spore;
         else if (ltype == Blocks.phaseWeaver) {
             check = phase;
         }
@@ -316,7 +425,7 @@ while (true) {
             var sw = getBuilding("switch1");
             if (sw.enabled) {
                 var idx = malloc(1);
-                print("malloc=", idx, "\n");
+                print("msg=", idx, "\n");
                 const mem: Memory = new Memory(srce_block, srce_size);
                 mem[idx] = loop;
                 if (idx > 0) {
@@ -330,15 +439,49 @@ while (true) {
             }
 
         }
-        else
-            print("Not handled: ", link, "\n");
-            
+        else if (ltype == Blocks.steamGenerator
+            || ltype == Blocks.combustionGenerator // 60
+            || ltype == Blocks.differentialGenerator
+            || ltype == Blocks.thoriumReactor) {
+            var power = link.powerNetIn - link.powerNetOut;
+            var enabled = true;
+                if (link.powerNetCapacity) {
+                    enabled = link.powerNetStored < link.powerNetCapacity - 5000;
+                    if (link.enabled)
+                        enabled = link.powerNetStored < link.powerNetCapacity;
+                }
+            if (ltype == Blocks.thoriumReactor) {
+                var enough_cryo = sensor(Liquids.cryofluid, link) >= 5;
+                var t: number = sensor(Items.thorium, link);
+                enabled = enabled && enough_cryo && (t > 5);
+            }
+            asm`control enabled ${link} ${enabled} 0 0`;
+
+            print("Power ", Math.floor(power), "/", Math.floor(link.powerNetCapacity - link.powerNetStored), "\n");
+        }
+        else if (onHandle(link) == false)
+            print("[yellow]Not handled: ", link, "[white]\n");
+
         if ((id != undefined) && (check !== undefined)) {
             var enabled = check < link_low_rsrc;
-            print(ltype, enabled ? " on ": " off ", check, "/", link_low_rsrc, "\n");
+
+            if (is_conveyor) {
+                if (last_check != check_item)
+                    print(need_color, check_item, enabled ? " on " : " off ", check, white + "\n");
+            }
+            else
+                print(need_color, ltype, enabled ? " on " : " off ", white + "\n");
+
+            last_check = check_item;
             asm`control enabled ${link} ${enabled} 0 0`;
         }
-    }
-   loop++;
+    } // for
+    if (retrieved)
+        allow_dump = true;
+
+    if (id === undefined)
+        allow_dump = false;
+    check_total_buildings = check_buildings;
+    loop++;
     printFlush(message);
 }
