@@ -1,0 +1,54 @@
+const version: String = "MassDriver-20240425-1";
+const display_version = "[violet]" + version + "[white]\n"
+var v = version;    // First line of asm
+var factor = 0.98;
+/* Each mass driver linked to the processor will be enabled
+a few time before they reach their max capacity.
+The time is dynamic so the processor tries to find the best time
+so the shot is made precisely when the driver is full.
+The goal is to reduce the energy consumption. */
+const starts = new MutableArray([100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100]);
+while (true) {
+    print(display_version);
+    for (let i = Vars.links - 1; i >= 0; i--) {
+        var unhandled: Boolean = false;
+        var link: AnyBuilding = getLink(i);
+        var ltype = link.type;
+        if (ltype == Blocks.massDriver) {
+            var start;
+            var items = link.totalItems;
+            var capacity = link.itemCapacity;
+            unchecked((start = starts[i]));
+            var enabled = items >= start;
+            asm`control enabled ${link} ${enabled} 0 0`;
+            if (enabled) {
+                var max;
+                do {
+                    max = items;
+                    items = link.totalItems;
+                } while (items >= max && max != capacity);
+                if (max == capacity)
+                    start *= factor;
+                else
+                    start += (capacity - max)/2;
+                if (start < capacity/2)
+                    start = capacity/2;
+                else if (start > capacity)
+                    start = capacity;
+                var end_tick = Vars.tick + 60; // Wait max 1s
+
+                while (Vars.tick < end_tick && link.totalItems >= max) {
+                    wait(0.05);
+                }
+                if (Vars.tick > end_tick) {
+                    print("[red] Receptor overloaded for #", i, "[white]\n");
+                    start *= 1.02;
+                }
+                unchecked((starts[i] = start));
+                asm`control enabled ${link} false 0 0`;
+            }
+            print("Enable driver #", i, " at ", Math.floor(start), "\n");
+        }
+    }
+    printFlush();
+}

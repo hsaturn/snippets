@@ -1,0 +1,166 @@
+set v:3:4 "MassDriver-20240425-1"
+set factor:4:4 0.98
+set starts:10:6->0 100
+set starts:10:6->1 100
+set starts:10:6->2 100
+set starts:10:6->3 100
+set starts:10:6->4 100
+set starts:10:6->5 100
+set starts:10:6->6 100
+set starts:10:6->7 100
+set starts:10:6->8 100
+set starts:10:6->9 100
+set starts:10:6->10 100
+set starts:10:6->11 100
+set starts:10:6->12 100
+set starts:10:6->13 100
+set starts:10:6->14 100
+set starts:10:6->15 100
+set starts:10:6->16 100
+set starts:10:6->17 100
+set starts:10:6->18 100
+set starts:10:6->19 100
+print "[violet]MassDriver-20240425-1[white]\n"
+op sub i:13:13 @links 1
+jump 82 lessThan i:13:13 0
+set unhandled:14:12 0
+getlink link:15:12 i:13:13
+sensor ltype:16:12 link:15:12 @type
+jump 80 notEqual ltype:16:12 @mass-driver
+sensor items:19:16 link:15:12 @totalItems
+sensor capacity:20:16 link:15:12 @itemCapacity
+set starts:10:6.&rt 34
+op mul &t0 i:13:13 2
+op add @counter 85 &t0
+set start:18:16 starts:10:6.&read
+op greaterThanEq enabled:22:16 items:19:16 start:18:16
+control enabled link:15:12 enabled:22:16 0 0
+jump 74 equal enabled:22:16 0
+set max:25:20 items:19:16
+sensor items:19:16 link:15:12 @totalItems
+op greaterThanEq &t1 items:19:16 max:25:20
+op notEqual &t2 max:25:20 capacity:20:16
+op land &t3 &t1 &t2
+jump 38 notEqual &t3 0
+jump 47 notEqual max:25:20 capacity:20:16
+op mul start:18:16 start:18:16 factor:4:4
+jump 50 always
+op sub &t4 capacity:20:16 max:25:20
+op div &t5 &t4 2
+op add start:18:16 start:18:16 &t5
+op div &t6 capacity:20:16 2
+jump 54 greaterThanEq start:18:16 &t6
+set start:18:16 &t6
+jump 56 always
+jump 56 lessThanEq start:18:16 capacity:20:16
+set start:18:16 capacity:20:16
+op add end_tick:38:20 @tick 60
+op lessThan &t7 @tick end_tick:38:20
+sensor &t8 link:15:12 @totalItems
+op greaterThanEq &t9 &t8 max:25:20
+op land &t10 &t7 &t9
+jump 64 equal &t10 0
+wait 0.05
+jump 57 always
+jump 69 lessThanEq @tick end_tick:38:20
+print "[red] Receptor overloaded for #"
+print i:13:13
+print "[white]\n"
+op mul start:18:16 start:18:16 1.02
+set starts:10:6.&write start:18:16
+set starts:10:6.&rt 73
+op mul &t11 i:13:13 2
+op add @counter 125 &t11
+control enabled link:15:12 false 0 0
+op floor &t1 start:18:16
+print "Enable driver #"
+print i:13:13
+print " at "
+print &t1
+print "\n"
+op sub i:13:13 i:13:13 1
+jump 24 always
+printflush message1
+jump 22 always
+end
+set starts:10:6.&read starts:10:6->0
+set @counter starts:10:6.&rt
+set starts:10:6.&read starts:10:6->1
+set @counter starts:10:6.&rt
+set starts:10:6.&read starts:10:6->2
+set @counter starts:10:6.&rt
+set starts:10:6.&read starts:10:6->3
+set @counter starts:10:6.&rt
+set starts:10:6.&read starts:10:6->4
+set @counter starts:10:6.&rt
+set starts:10:6.&read starts:10:6->5
+set @counter starts:10:6.&rt
+set starts:10:6.&read starts:10:6->6
+set @counter starts:10:6.&rt
+set starts:10:6.&read starts:10:6->7
+set @counter starts:10:6.&rt
+set starts:10:6.&read starts:10:6->8
+set @counter starts:10:6.&rt
+set starts:10:6.&read starts:10:6->9
+set @counter starts:10:6.&rt
+set starts:10:6.&read starts:10:6->10
+set @counter starts:10:6.&rt
+set starts:10:6.&read starts:10:6->11
+set @counter starts:10:6.&rt
+set starts:10:6.&read starts:10:6->12
+set @counter starts:10:6.&rt
+set starts:10:6.&read starts:10:6->13
+set @counter starts:10:6.&rt
+set starts:10:6.&read starts:10:6->14
+set @counter starts:10:6.&rt
+set starts:10:6.&read starts:10:6->15
+set @counter starts:10:6.&rt
+set starts:10:6.&read starts:10:6->16
+set @counter starts:10:6.&rt
+set starts:10:6.&read starts:10:6->17
+set @counter starts:10:6.&rt
+set starts:10:6.&read starts:10:6->18
+set @counter starts:10:6.&rt
+set starts:10:6.&read starts:10:6->19
+set @counter starts:10:6.&rt
+set starts:10:6->0 starts:10:6.&write
+set @counter starts:10:6.&rt
+set starts:10:6->1 starts:10:6.&write
+set @counter starts:10:6.&rt
+set starts:10:6->2 starts:10:6.&write
+set @counter starts:10:6.&rt
+set starts:10:6->3 starts:10:6.&write
+set @counter starts:10:6.&rt
+set starts:10:6->4 starts:10:6.&write
+set @counter starts:10:6.&rt
+set starts:10:6->5 starts:10:6.&write
+set @counter starts:10:6.&rt
+set starts:10:6->6 starts:10:6.&write
+set @counter starts:10:6.&rt
+set starts:10:6->7 starts:10:6.&write
+set @counter starts:10:6.&rt
+set starts:10:6->8 starts:10:6.&write
+set @counter starts:10:6.&rt
+set starts:10:6->9 starts:10:6.&write
+set @counter starts:10:6.&rt
+set starts:10:6->10 starts:10:6.&write
+set @counter starts:10:6.&rt
+set starts:10:6->11 starts:10:6.&write
+set @counter starts:10:6.&rt
+set starts:10:6->12 starts:10:6.&write
+set @counter starts:10:6.&rt
+set starts:10:6->13 starts:10:6.&write
+set @counter starts:10:6.&rt
+set starts:10:6->14 starts:10:6.&write
+set @counter starts:10:6.&rt
+set starts:10:6->15 starts:10:6.&write
+set @counter starts:10:6.&rt
+set starts:10:6->16 starts:10:6.&write
+set @counter starts:10:6.&rt
+set starts:10:6->17 starts:10:6.&write
+set @counter starts:10:6.&rt
+set starts:10:6->18 starts:10:6.&write
+set @counter starts:10:6.&rt
+set starts:10:6->19 starts:10:6.&write
+set @counter starts:10:6.&rt
+
