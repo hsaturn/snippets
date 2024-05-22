@@ -1,0 +1,39 @@
+const version: String = "enable_follower-20240512";
+var v = version;   // 1st line
+var follower = getBuilding("projector1");
+const display_version: String = "[violet]" + version + "[white]\n";
+/* follower is a building that will follow all other
+building connected to the processor.
+*/
+// True : at least one building must be enabled to enable follower
+// else all buildings must be enabled.
+var follow_any = true;
+
+var all_enabled = true;
+var any_enabled = false;
+var message: AnyBuilding;
+
+for (let i = Vars.links - 1; i >= 0; i--) {
+    var link: AnyBuilding = getLink(i);
+    var ltype = link.type;
+
+    if (ltype == Blocks.message)
+        message = link;
+    else if (!(link === follower)) {
+        all_enabled &&= link.enabled;
+        any_enabled ||= link.enabled;
+    }
+}
+
+var enabled = ((follow_any && any_enabled) || (!follow_any && all_enabled));
+
+if (message) {
+    print(display_version);
+    print("Follows: ", follow_any ? "any\n" : "all\n");
+    print(follower.type, " ", enabled ? "[green]ON[white]\n" : "[red]OFF[white]\n");
+    printFlush(message);
+}
+
+asm`control enabled ${follower} ${enabled} 0 0`;
+
+
